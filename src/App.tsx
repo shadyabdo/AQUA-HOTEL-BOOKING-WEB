@@ -18,6 +18,7 @@ import ContactPage from "@/components/ContactPage";
 import OffersPage from "@/components/OffersPage";
 import { ArticlesPage } from "@/components/ArticlesPage";
 import ArticleDetailsPage from "@/components/ArticleDetailsPage";
+import LoginPage from "@/components/LoginPage";
 import ScrollToTop from "@/components/ScrollToTop";
 import PrivacyPolicyPage from "@/components/PrivacyPolicyPage";
 import CancellationPolicyPage from "@/components/CancellationPolicyPage";
@@ -287,6 +288,7 @@ export default function App() {
                 <Route path="/rooms" element={<RoomsPage />} />
                 <Route path="/hotel/:cityId/:id" element={<HotelPage />} />
                 <Route path="/hotel/:cityId/:id/room/:roomId" element={<RoomDetailsPage />} />
+                <Route path="/login" element={<LoginPage />} />
 
                 {/* Unified Management Page - Handling Profile, Bookings and Favorites */}
                 <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/" />} />

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { db, auth, sendVerificationEmail, createBooking, getAllRooms, addTransaction } from "@/src/lib/firebase";
 import { collection, addDoc, getDocs, query, doc, getDoc, updateDoc, increment } from "firebase/firestore";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
@@ -25,6 +26,7 @@ interface BookingModalProps {
 export default function BookingModal({ isOpen, onClose, initialRoomId, initialHotelId }: BookingModalProps) {
   const stripe = useStripe();
   const elements = useElements();
+  const navigate = useNavigate();
 
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,8 +110,9 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
 
   const handleSubmit = async () => {
     if (!auth.currentUser) {
-      const provider = new GoogleAuthProvider();
-      try { await signInWithPopup(auth, provider); } catch (error) { return; }
+      toast.error("يرجى تسجيل الدخول أولاً لإتمام الحجز");
+      navigate('/login');
+      return;
     }
     setIsSubmitting(true);
     setPaymentError(null);

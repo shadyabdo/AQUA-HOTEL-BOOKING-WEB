@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Footer() {
   return (
     <footer className="bg-[#050814] text-white pt-16 md:pt-32 pb-12 border-t border-white/5 relative overflow-x-hidden w-full" dir="rtl">
@@ -19,30 +21,30 @@ export default function Footer() {
           <div>
             <h4 className="text-[#4F46E5] font-black uppercase tracking-widest text-xs mb-8">روابط سريعة</h4>
             <ul className="space-y-4 text-sm font-bold text-muted-foreground">
-              <li><a href="/" className="hover:text-white transition-colors">الرئيسية</a></li>
-              <li><a href="/offers" className="hover:text-white transition-colors">الكوبونات</a></li>
-              <li><a href="/articles" className="hover:text-white transition-colors">المدونة السياحية</a></li>
-              <li><a href="/contact" className="hover:text-white transition-colors">تواصل معنا</a></li>
+              <li><Link to="/" className="hover:text-white transition-colors">الرئيسية</Link></li>
+              <li><Link to="/offers" className="hover:text-white transition-colors">الكوبونات</Link></li>
+              <li><Link to="/articles" className="hover:text-white transition-colors">المدونة السياحية</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">تواصل معنا</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-[#4F46E5] font-black uppercase tracking-widest text-xs mb-8">الدعم والمساندة</h4>
             <ul className="space-y-4 text-sm font-bold text-muted-foreground">
-              <li><a href="/faq" className="hover:text-white transition-colors">مركز المساعدة</a></li>
-              <li><a href="/cancellation" className="hover:text-white transition-colors">سياسة الإلغاء</a></li>
-              <li><a href="/privacy" className="hover:text-white transition-colors">الأمان والخصوصية</a></li>
-              <li><a href="/faq" className="hover:text-white transition-colors">الأسئلة الشائعة</a></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">مركز المساعدة</Link></li>
+              <li><Link to="/cancellation" className="hover:text-white transition-colors">سياسة الإلغاء</Link></li>
+              <li><Link to="/privacy" className="hover:text-white transition-colors">الأمان والخصوصية</Link></li>
+              <li><Link to="/faq" className="hover:text-white transition-colors">الأسئلة الشائعة</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-[#4F46E5] font-black uppercase tracking-widest text-xs mb-8">اكتشف المزيد</h4>
             <ul className="space-y-4 text-sm font-bold text-muted-foreground">
-              <li><a href="/rooms" className="hover:text-white transition-colors">تصفح الفنادق</a></li>
-              <li><a href="/rooms" className="hover:text-white transition-colors">أفضل العروض</a></li>
-              <li><a href="/articles" className="hover:text-white transition-colors">نصائح السفر</a></li>
-              <li><a href="/" className="hover:text-white transition-colors">شركاء النجاح</a></li>
+              <li><Link to="/rooms" className="hover:text-white transition-colors">تصفح الفنادق</Link></li>
+              <li><Link to="/rooms" className="hover:text-white transition-colors">أفضل العروض</Link></li>
+              <li><Link to="/articles" className="hover:text-white transition-colors">نصائح السفر</Link></li>
+              <li><Link to="/" className="hover:text-white transition-colors">شركاء النجاح</Link></li>
             </ul>
           </div>
         </div>
@@ -50,9 +52,9 @@ export default function Footer() {
         <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-black uppercase tracking-normal md:tracking-[0.2em] text-muted-foreground/50">
           <p>© 2026 AQUABOOK™. جميع الحقوق محفوظة.</p>
           <div className="flex gap-4 md:gap-8">
-            <a href="/privacy" className="hover:text-white">الخصوصية</a>
-            <a href="/cancellation" className="hover:text-white">الشروط</a>
-            <a href="/privacy" className="hover:text-white">الكوكيز</a>
+            <Link to="/privacy" className="hover:text-white">الخصوصية</Link>
+            <Link to="/cancellation" className="hover:text-white">الشروط</Link>
+            <Link to="/privacy" className="hover:text-white">الكوكيز</Link>
           </div>
         </div>
       </div>

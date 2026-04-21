@@ -32,13 +32,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
-import AuthModal from "./AuthModal";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<any>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -92,7 +90,6 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#d6d6e7]/50">
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       <div className="container-custom h-20 md:h-24 flex items-center justify-between gap-4">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-3 group shrink-0">
@@ -178,10 +175,10 @@ export default function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="hidden sm:flex text-[#4F46E5] font-bold hover:bg-[#EEF2FF] rounded-xl px-4 md:px-6" onClick={() => setShowAuthModal(true)}>
+              <Button variant="ghost" className="hidden sm:flex text-[#4F46E5] font-bold hover:bg-[#EEF2FF] rounded-xl px-4 md:px-6" onClick={() => navigate('/login')}>
                 دخول
               </Button>
-              <Button className="bg-[#4F46E5] text-white hover:bg-[#3730A3] font-bold rounded-xl px-4 sm:px-6 shadow-lg shadow-indigo-100" onClick={() => setShowAuthModal(true)}>
+              <Button className="bg-[#4F46E5] text-white hover:bg-[#3730A3] font-bold rounded-xl px-4 sm:px-6 shadow-lg shadow-indigo-100" onClick={() => navigate('/login')}>
                 <span className="hidden sm:inline">اشتراك</span>
                 <span className="sm:hidden text-xs">دخول</span>
               </Button>
@@ -225,7 +222,7 @@ export default function Navbar() {
                 </Link>
               ))}
               {!user && (
-                <Button onClick={() => { setIsOpen(false); setShowAuthModal(true); }} className="w-full h-12 bg-[#4F46E5] text-white font-bold rounded-xl">تسجيل الدخول</Button>
+                <Button onClick={() => { setIsOpen(false); navigate('/login'); }} className="w-full h-12 bg-[#4F46E5] text-white font-bold rounded-xl">تسجيل الدخول</Button>
               )}
             </div>
           </motion.div>
