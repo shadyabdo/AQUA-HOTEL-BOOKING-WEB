@@ -176,13 +176,13 @@ export default function RoomsPage() {
       {/* Modern Search Summary */}
       <div className="bg-white border-b border-[#d6d6e7]/50 pt-10 pb-10">
         <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-end gap-6">
-                <div>
-                   <h1 className="text-2xl md:text-4xl font-black text-[#151e63] mb-2">{destination || "كل الوجهات"}</h1>
-                   <div className="flex items-center gap-4 text-[#777aaf] font-bold text-sm">
-                      <div className="flex items-center gap-1"><CalendarIcon size={16} /> {date.from && format(date.from, "d MMM")} — {date.to && format(date.to, "d MMM")}</div>
-                      <div className="w-1 h-1 bg-[#d6d6e7] rounded-full" />
-                      <div className="flex items-center gap-1"><Users size={16} /> {guestsCount}</div>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div className="space-y-3">
+                   <h1 className="text-2xl md:text-4xl font-black text-[#151e63] leading-tight">{destination || "كل الوجهات"}</h1>
+                   <div className="flex flex-wrap items-center gap-3 md:gap-4 text-[#777aaf] font-bold text-xs md:text-sm">
+                      <div className="flex items-center gap-1.5"><CalendarIcon size={14} className="md:size-4" /> {date.from && format(date.from, "d MMM")} — {date.to && format(date.to, "d MMM")}</div>
+                      <div className="hidden sm:block w-1 h-1 bg-[#d6d6e7] rounded-full" />
+                      <div className="flex items-center gap-1.5"><Users size={14} className="md:size-4" /> {guestsCount}</div>
                    </div>
                 </div>
                 <Button 
@@ -199,7 +199,7 @@ export default function RoomsPage() {
       <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 mt-12">
         {/* Modern Sidebar */}
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white rounded-3xl p-8 border border-[#d6d6e7]/50 shadow-sm sticky top-32">
+          <div className="bg-white rounded-[2rem] md:rounded-3xl p-6 md:p-8 border border-[#d6d6e7]/50 shadow-sm lg:sticky lg:top-32">
             <div className="flex items-center gap-3 mb-8">
               <SlidersHorizontal className="text-[#4F46E5]" size={20} />
               <h3 className="text-xl font-black text-[#151e63]">تصفية متقدمة</h3>
@@ -272,9 +272,9 @@ export default function RoomsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.1 }}
                   key={hotel.id} 
-                  className="modern-card group flex flex-col md:flex-row h-full md:h-[340px]"
+                  className="modern-card group flex flex-col md:flex-row h-full md:min-h-[340px]"
                 >
-                  <div className="w-full md:w-[320px] lg:w-[380px] h-72 md:h-auto relative shrink-0 overflow-hidden">
+                  <div className="w-full md:w-[280px] lg:w-[350px] 3xl:w-[420px] h-64 md:h-auto relative shrink-0 overflow-hidden">
                     <img src={(hotel.Hotel_img && hotel.Hotel_img[0]) || hotel.images?.[0] || hotel.image || "https://picsum.photos/seed/hotel/800/600"} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <button 
                       onClick={(e) => handleToggleFavorite(e, hotel)}
@@ -288,30 +288,29 @@ export default function RoomsPage() {
                         <Heart size={20} className={cn(favorites.includes(hotel.id) && "fill-current")} />
                     </button>
                     <div className="absolute bottom-4 left-4">
-                       <span className="badge-indigo bg-white/90 backdrop-blur-md">موصى به</span>
+                       <span className="badge-indigo bg-white/90 backdrop-blur-md text-[10px] md:text-xs">موصى به</span>
                     </div>
                   </div>
                   
-                  <div className="flex-grow p-8 flex flex-col">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="space-y-2">
+                  <div className="flex-grow p-5 md:p-8 flex flex-col min-w-0">
+                    <div className="flex flex-col-reverse xs:flex-row justify-between items-start gap-4 mb-4">
+                      <div className="space-y-2 min-w-0 flex-1">
                         <div className="flex items-center gap-1 text-[#4F46E5]">
-                           <Star size={12} className="fill-current" />
-                           <Star size={12} className="fill-current" />
-                           <Star size={12} className="fill-current" />
-                           <Star size={12} className="fill-current" />
-                           <Star size={12} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
                         </div>
-                        <h3 className="text-3xl font-black text-[#151e63] group-hover:text-[#4F46E5] transition-colors cursor-pointer" onClick={() => navigate(`/hotel/${hotel.cityId}/${hotel.id}`)}>{hotel.name}</h3>
-
+                        <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-[#151e63] group-hover:text-[#4F46E5] transition-colors cursor-pointer leading-tight break-words" onClick={() => navigate(`/hotel/${hotel.cityId}/${hotel.id}`)}>{hotel.name}</h3>
                       </div>
                       
-                      <div className="flex items-center gap-3 bg-[#e8e5f0] p-3 rounded-2xl border border-[#C7D2FE]/30">
+                      <div className="flex items-center gap-2 md:gap-3 bg-[#e8e5f0] p-2 md:p-3 rounded-2xl border border-[#C7D2FE]/30 shrink-0 self-end xs:self-start">
                         <div className="text-left">
-                          <p className="font-black text-sm text-[#0f0b18]">رائع</p>
-                          <p className="text-[10px] text-[#777aaf] font-bold">{(hotel.reviewsCount || hotel.reviews || 0)} تقييم</p>
+                          <p className="font-black text-xs md:text-sm text-[#0f0b18]">رائع</p>
+                          <p className="text-[8px] md:text-[10px] text-[#777aaf] font-bold">{(hotel.reviewsCount || hotel.reviews || 0)} تقييم</p>
                         </div>
-                        <div className="bg-[#4F46E5] text-white font-black text-xl w-fit h-fit min-w-[3rem] min-h-[3rem] px-3 py-2 flex items-center justify-center rounded-xl shadow-lg shadow-[#e3dff0]">
+                        <div className="bg-[#4F46E5] text-white font-black text-base md:text-xl w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl shadow-lg shadow-[#e3dff0]">
                           {(hotel.rating || 4.5).toFixed(1)}
                         </div>
                       </div>
@@ -326,28 +325,28 @@ export default function RoomsPage() {
                       ))}
                     </div>
 
-                    <div className="mt-auto flex justify-between items-end pt-8 border-t border-[#d6d6e7]/30">
+                    <div className="mt-auto flex flex-col sm:flex-row justify-between items-start sm:items-end pt-6 md:pt-8 border-t border-[#d6d6e7]/30 gap-4 sm:gap-0">
                       <div>
-                        <div className="flex items-center gap-2 text-[#059669] text-xs font-black mb-2">
+                        <div className="flex items-center gap-2 text-[#059669] text-[10px] md:text-xs font-black mb-2">
                            <ShieldCheck size={14} /> إلغاء مجاني متاح
                         </div>
                         {hotel.price && parseFloat(String(hotel.price)) > 0 ? (
                           <>
-                            <div className="text-xs text-[#777aaf] font-bold">السعر لـ 3 ليالٍ</div>
-                            <div className="text-3xl font-black text-[#151e63] tracking-tighter">EGP {(parseFloat(String(hotel.price)) || 0) * 3}</div>
+                            <div className="text-[10px] md:text-xs text-[#777aaf] font-bold">السعر لـ 3 ليالٍ</div>
+                            <div className="text-2xl md:text-3xl font-black text-[#151e63] tracking-tighter">EGP {(parseFloat(String(hotel.price)) || 0) * 3}</div>
                           </>
                         ) : (
                           <>
-                            <div className="text-xs text-[#777aaf] font-bold">الأسعار متوفرة</div>
-                            <div className="text-xl font-black text-[#4F46E5] tracking-tighter">عرض الأسعار بالداخل</div>
+                            <div className="text-[10px] md:text-xs text-[#777aaf] font-bold">الأسعار متوفرة</div>
+                            <div className="text-lg md:text-xl font-black text-[#4F46E5] tracking-tighter">عرض الأسعار بالداخل</div>
                           </>
                         )}
                       </div>
                       <Button 
                         onClick={() => navigate(`/hotel/${hotel.cityId}/${hotel.id}${window.location.search}`)}
-                        className="action-button px-10 rounded-2xl"
+                        className="action-button w-full sm:w-auto px-8 md:px-10 rounded-xl md:rounded-2xl h-12 md:h-14"
                       >
-                        عرض الغرف <ChevronLeft size={20} className="mr-2" />
+                        عرض الغرف <ChevronLeft size={18} className="mr-2" />
                       </Button>
                     </div>
                   </div>

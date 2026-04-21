@@ -17,11 +17,11 @@ import {
   Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { auth, db, getFavoritesListener, toggleFavorite, cancelBooking, updateUserProfileImage, addTransaction, getTransactionsListener } from "@/src/lib/firebase";
 import { collection, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
-import { cn } from "@/lib/utils";
 import { showError, showSuccess, showInfo, showConfirm } from "@/src/lib/swal";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -187,7 +187,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <div className="container mx-auto px-4 py-12">
+      <div className="container-custom py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Main Content (Left in RTL) */}
@@ -196,10 +196,10 @@ export default function ProfilePage() {
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[3rem] border border-[#d6d6e7]/50 shadow-sm overflow-hidden min-h-[600px]"
+              className="bg-white rounded-[2rem] md:rounded-[3rem] border border-[#d6d6e7]/50 shadow-sm overflow-hidden min-h-[500px] md:min-h-[600px]"
             >
               {/* Header inside content */}
-              <div className="p-10 border-b border-[#d6d6e7]/30 flex justify-between items-center">
+              <div className="p-6 md:p-10 border-b border-[#d6d6e7]/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="space-y-1">
                    <h2 className="text-xl md:text-3xl font-black text-[#151e63] tracking-tighter">
                       {activeTab === 'bookings' && "حجوزاتي القادمة"}
@@ -219,7 +219,7 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <div className="p-10">
+              <div className="p-6 md:p-10">
                 {loading ? (
                    <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-[#4F46E5] border-t-transparent rounded-full animate-spin" /></div>
                 ) : (
@@ -239,38 +239,40 @@ export default function ProfilePage() {
                          <div className="space-y-6">
                             {visibleBookings.map(booking => (
                               <div key={booking.id} className="p-6 bg-[#fcfcfd] border border-[#d6d6e7]/50 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 group hover:border-[#4F46E5]/30 transition-all">
-                                 <div className="flex items-center gap-5">
+                                 <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-5 w-full sm:w-auto">
                                     <div className="w-16 h-16 bg-white rounded-2xl border border-[#d6d6e7]/30 flex flex-col items-center justify-center text-[#4F46E5] shrink-0">
                                        <span className="text-[10px] font-black uppercase mb-0.5">{format(new Date(booking.checkIn), "MMM", { locale: ar })}</span>
                                        <span className="text-xl font-black">{format(new Date(booking.checkIn), "d")}</span>
                                     </div>
-                                    <div>
-                                       <h4 className="text-lg font-black text-[#151e63] group-hover:text-[#4F46E5] transition-colors">{booking.roomTitle}</h4>
-                                       <p className="text-xs text-[#777aaf] font-bold flex items-center gap-1"><MapPin size={12} /> القاهرة، مصر</p>
+                                    <div className="text-center sm:text-right">
+                                       <h4 className="text-base md:text-lg font-black text-[#151e63] group-hover:text-[#4F46E5] transition-colors">{booking.roomTitle}</h4>
+                                       <p className="text-[10px] md:text-xs text-[#777aaf] font-bold flex items-center justify-center sm:justify-start gap-1"><MapPin size={12} /> القاهرة، مصر</p>
                                     </div>
                                  </div>
-                                 <div className="flex items-center gap-4">
-                                     <div className="text-left">
-                                        <p className="text-[10px] text-[#777aaf] font-black uppercase mb-1">الحالة</p>
-                                        <span className={cn(
-                                           "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                           booking.status === 'confirmed' ? "bg-green-100 text-green-700" :
-                                           booking.status === 'pending' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-                                        )}>
-                                           {booking.status === 'confirmed' ? "مؤكد" : booking.status === 'pending' ? "قيد الانتظار" : "ملغي"}
-                                        </span>
-                                     </div>
-                                     {booking.status !== 'cancelled' && (
-                                       <Button 
-                                         onClick={(e) => { e.stopPropagation(); handleCancelBooking(booking.id); }}
-                                         variant="ghost" 
-                                         className="h-10 text-xs font-black text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl px-4"
-                                       >
-                                         إلغاء الحجز
-                                       </Button>
-                                     )}
-                                     <Button variant="ghost" className="h-10 w-10 rounded-xl p-0 text-[#777aaf] hover:bg-[#f5f5fa]"><ChevronLeft size={20} /></Button>
-                                  </div>
+                                 <div className="flex items-center justify-between w-full md:w-auto gap-4 md:gap-6 border-t md:border-t-0 pt-4 md:pt-0">
+                                    <div className="text-right">
+                                       <p className="text-[10px] text-[#777aaf] font-black uppercase mb-1">الحالة</p>
+                                       <span className={cn(
+                                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
+                                          booking.status === 'confirmed' ? "bg-green-100 text-green-700" :
+                                          booking.status === 'pending' ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                                       )}>
+                                          {booking.status === 'confirmed' ? "مؤكد" : booking.status === 'pending' ? "قيد الانتظار" : "ملغي"}
+                                       </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {booking.status !== 'cancelled' && (
+                                        <Button 
+                                          onClick={(e) => { e.stopPropagation(); handleCancelBooking(booking.id); }}
+                                          variant="ghost" 
+                                          className="h-10 text-[10px] font-black text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl px-3"
+                                        >
+                                          إلغاء الحجز
+                                        </Button>
+                                      )}
+                                      <Button variant="ghost" className="h-10 w-10 rounded-xl p-0 text-[#777aaf] hover:bg-[#f5f5fa]"><ChevronLeft size={20} /></Button>
+                                    </div>
+                                 </div>
                               </div>
                             ))}
                          </div>
@@ -326,7 +328,7 @@ export default function ProfilePage() {
 
           {/* Sidebar (Right in RTL) */}
           <aside className="lg:col-span-4 lg:order-1">
-            <div className="bg-white rounded-[3rem] border border-[#d6d6e7]/50 shadow-sm p-8 sticky top-32 space-y-10">
+            <div className="bg-white rounded-[2rem] md:rounded-[3rem] border border-[#d6d6e7]/50 shadow-sm p-6 md:p-8 sticky top-32 space-y-8 md:space-y-10">
               {/* User Profile Info */}
               <div className="text-center space-y-6">
                 <div className="relative w-32 h-32 mx-auto">

@@ -108,19 +108,19 @@ export default function BookingBar({ onSearch }: { onSearch?: () => void }) {
   };
 
   return (
-    <div className="container mx-auto px-4 relative z-30 -mt-24">
-      <div className="bg-white p-3 rounded-[2.5rem] shadow-[0_20px_50px_rgba(55,48,163,0.15)] max-w-6xl mx-auto border border-[#d6d6e7]/50">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-center">
+    <div className="container-custom relative z-30 -mt-10 sm:-mt-16 md:-mt-20 lg:-mt-24 3xl:-mt-32">
+      <div className="bg-white p-2 md:p-3 lg:p-4 rounded-[2rem] sm:rounded-[2.5rem] 3xl:rounded-[3.5rem] shadow-[0_20px_60px_rgba(55,48,163,0.15)] max-w-7xl mx-auto border border-[#d6d6e7]/50">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-1 md:gap-2 lg:gap-2 items-center">
           
           {/* Destination */}
-          <div className="lg:col-span-4 flex items-center px-6 py-4 rounded-[1.8rem] hover:bg-[#f5f5fa] transition-colors relative group" ref={dropdownRef}>
-            <MapPin className="text-[#4F46E5] ml-4 shrink-0 group-hover:scale-110 transition-transform" size={24} />
+          <div className="lg:col-span-4 flex items-center px-4 xl:px-6 py-3 md:py-4 xl:py-5 rounded-2xl md:rounded-[1.8rem] 3xl:rounded-[2.2rem] hover:bg-[#f5f5fa] transition-colors relative group" ref={dropdownRef}>
+            <MapPin className="text-[#4F46E5] ml-3 md:ml-4 shrink-0 group-hover:scale-110 transition-transform" size={24} />
             <div className="flex-1">
-               <label className="text-[10px] font-black text-[#777aaf] uppercase tracking-widest block mb-0.5">الوجهة</label>
+               <label className="text-[9px] md:text-[10px] font-black text-[#777aaf] uppercase tracking-widest block mb-0.5">الوجهة</label>
                <input 
                 type="text" 
                 placeholder="إلى أين تريد الذهاب؟" 
-                className="w-full outline-none text-base font-bold placeholder:text-[#b6b7d5] bg-transparent"
+                className="w-full outline-none text-sm md:text-base 3xl:text-lg font-bold placeholder:text-[#b6b7d5] bg-transparent"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
                 onFocus={() => destination.trim().length > 0 && setIsSuggestionsOpen(true)}
@@ -157,15 +157,15 @@ export default function BookingBar({ onSearch }: { onSearch?: () => void }) {
           </div>
 
           {/* Dates */}
-          <div className="lg:col-span-4 flex items-center px-6 py-4 rounded-[1.8rem] hover:bg-[#f5f5fa] transition-colors border-r-0 lg:border-r border-[#d6d6e7]/50 group">
+          <div className="lg:col-span-4 flex items-center px-4 xl:px-6 py-3 md:py-4 xl:py-5 rounded-2xl md:rounded-[1.8rem] 3xl:rounded-[2.2rem] hover:bg-[#f5f5fa] transition-colors lg:border-r border-[#d6d6e7]/50 group">
             <Popover>
               <PopoverTrigger
                 render={
                   <button className="flex items-center w-full text-right group">
-                    <CalendarIcon className="text-[#4F46E5] ml-4 shrink-0 group-hover:rotate-6 transition-transform" size={24} />
+                    <CalendarIcon className="text-[#4F46E5] ml-3 md:ml-4 shrink-0 group-hover:rotate-6 transition-transform" size={24} />
                     <div className="flex-1">
-                       <label className="text-[10px] font-black text-[#777aaf] uppercase tracking-widest block mb-0.5">التواريخ</label>
-                       <span className="text-base font-bold text-[#151e63] whitespace-nowrap">
+                       <label className="text-[9px] md:text-[10px] font-black text-[#777aaf] uppercase tracking-widest block mb-0.5">التواريخ</label>
+                       <span className="text-sm md:text-base 3xl:text-lg font-bold text-[#151e63] whitespace-nowrap">
                         {date.from ? (
                           date.to ? (
                             <>{format(date.from, "d MMM", { locale: ar })} — {format(date.to, "d MMM", { locale: ar })}</>
@@ -196,13 +196,13 @@ export default function BookingBar({ onSearch }: { onSearch?: () => void }) {
           {/* Guests */}
           <div className="lg:col-span-3 relative" ref={guestsRef}>
             <div 
-              className="flex items-center px-6 py-4 rounded-[1.8rem] hover:bg-[#f5f5fa] transition-colors border-r-0 lg:border-r border-[#d6d6e7]/50 cursor-pointer group"
+              className="flex items-center px-4 xl:px-6 py-3 md:py-4 xl:py-5 rounded-2xl md:rounded-[1.8rem] 3xl:rounded-[2.2rem] hover:bg-[#f5f5fa] transition-colors lg:border-r border-[#d6d6e7]/50 cursor-pointer group"
               onClick={() => setIsGuestsOpen(!isGuestsOpen)}
             >
-              <Users className="text-[#4F46E5] ml-4 shrink-0 group-hover:scale-110 transition-transform" size={24} />
+              <Users className="text-[#4F46E5] ml-3 md:ml-4 shrink-0 group-hover:scale-110 transition-transform" size={24} />
               <div className="flex-1">
-                 <label className="text-[10px] font-black text-[#777aaf] uppercase tracking-widest block mb-0.5">الضيوف</label>
-                 <span className="text-base font-bold text-[#151e63] whitespace-nowrap overflow-hidden text-ellipsis block">{guestsLabel}</span>
+                 <label className="text-[9px] md:text-[10px] font-black text-[#777aaf] uppercase tracking-widest block mb-0.5">الضيوف</label>
+                 <span className="text-sm md:text-base 3xl:text-lg font-bold text-[#151e63] whitespace-nowrap overflow-hidden text-ellipsis block">{guestsLabel}</span>
               </div>
             </div>
 
@@ -244,12 +244,12 @@ export default function BookingBar({ onSearch }: { onSearch?: () => void }) {
           </div>
 
           {/* Search Button */}
-          <div className="lg:col-span-1 p-1">
+          <div className="lg:col-span-1 p-1 md:col-span-2 lg:col-span-1">
             <Button 
               onClick={handleBooking}
-              className="w-full h-16 lg:h-16 rounded-[1.5rem] bg-[#4F46E5] hover:bg-[#0f0b18] text-white font-black shadow-lg shadow-[#d0cae5] transition-all hover:scale-105 active:scale-95"
+              className="w-full h-14 md:h-16 xl:h-20 rounded-2xl md:rounded-[1.5rem] 3xl:rounded-[2rem] bg-[#4F46E5] hover:bg-[#0f0b18] text-white font-black shadow-lg shadow-[#d0cae5] transition-all hover:scale-[1.02] active:scale-95"
             >
-              <Search className="h-6 w-6" />
+              <Search className="h-6 w-6 md:h-7 md:w-7" />
             </Button>
           </div>
         </div>

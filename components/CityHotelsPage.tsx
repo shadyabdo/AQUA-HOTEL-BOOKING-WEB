@@ -159,8 +159,8 @@ export default function CityHotelsPage() {
       <div className="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8 mt-12">
         {/* Modern Sidebar */}
         <aside className="lg:col-span-3 space-y-6">
-          <div className="bg-white rounded-3xl p-8 border border-[#d6d6e7]/50 shadow-sm sticky top-32">
-            <div className="flex items-center gap-3 mb-8">
+          <div className="bg-white rounded-[2rem] md:rounded-3xl p-6 md:p-8 border border-[#d6d6e7]/50 shadow-sm lg:sticky lg:top-32">
+            <div className="flex items-center gap-3 mb-6 md:mb-8">
               <SlidersHorizontal className="text-[#4F46E5]" size={20} />
               <h3 className="text-xl font-black text-[#151e63]">تصفية النتائج</h3>
             </div>
@@ -225,41 +225,61 @@ export default function CityHotelsPage() {
                   key={hotel.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="modern-card group cursor-pointer flex flex-col h-full"
+                  className="modern-card group cursor-pointer flex flex-col h-full bg-white overflow-hidden"
                   onClick={() => navigate(`/hotel/${hotel.cityId}/${hotel.id}`)}
                 >
-                  <div className="relative h-64 overflow-hidden">
+                  <div className="relative h-64 sm:h-72 overflow-hidden shrink-0">
                     <img 
                       src={hotel.images[0]} 
                       alt={hotel.name} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
-                    <div className="absolute top-6 left-6 badge-indigo bg-white/90 backdrop-blur-md shadow-lg w-fit px-3 py-1.5 flex items-center gap-1.5">
-                      <Star size={14} className="text-[#4F46E5] fill-current" />
-                      <span className="font-black text-sm">{hotel.rating}</span>
+                    <div className="absolute bottom-4 left-4">
+                       <span className="badge-indigo bg-white/90 backdrop-blur-md text-[10px]">موصى به</span>
                     </div>
                     <button 
                       onClick={(e) => handleToggleFavorite(e, hotel)}
                       className={cn(
-                        "absolute top-6 right-6 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all z-10",
+                        "absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all z-10",
                         favorites.includes(hotel.id) 
                           ? "bg-red-500 text-white" 
                           : "bg-white/90 backdrop-blur-md text-[#777aaf] hover:text-red-500 hover:scale-110"
                       )}
                     >
-                        <Heart size={20} className={cn(favorites.includes(hotel.id) && "fill-current")} />
+                        <Heart size={18} className={cn(favorites.includes(hotel.id) && "fill-current")} />
                     </button>
                   </div>
-                  <div className="p-6 flex flex-col flex-grow">
-                    <h3 className="text-xl font-black text-[#151e63] mb-3 group-hover:text-[#4F46E5] transition-colors line-clamp-1">{hotel.name}</h3>
-                    <p className="text-xs text-[#5a5e9a] font-medium line-clamp-2 mb-6 flex-grow">
+                  
+                  <div className="p-5 md:p-6 flex flex-col flex-grow min-w-0">
+                    <div className="flex justify-between items-start gap-4 mb-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1 text-[#4F46E5] mb-1">
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                           <Star size={10} className="fill-current" />
+                        </div>
+                        <h3 className="text-xl font-black text-[#151e63] group-hover:text-[#4F46E5] transition-colors line-clamp-1 leading-tight">{hotel.name}</h3>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 bg-[#e8e5f0] p-2 rounded-xl border border-[#C7D2FE]/30 shrink-0">
+                        <div className="bg-[#4F46E5] text-white font-black text-sm w-8 h-8 flex items-center justify-center rounded-lg shadow-md">
+                          {(hotel.rating || 4.5).toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] md:text-xs text-[#5a5e9a] font-bold line-clamp-2 mb-6 flex-grow leading-relaxed">
                       {hotel.description}
                     </p>
+                    
                     <div className="flex items-center justify-between pt-4 border-t border-[#d6d6e7]/30">
-                      <div className="bg-[#e8e5f0] p-2 rounded-xl text-[#4F46E5] font-black text-[10px] uppercase">
-                        {hotel.reviewsCount} تقييم
+                      <div>
+                        <p className="text-[10px] text-[#777aaf] font-black uppercase tracking-tighter">تبدأ من</p>
+                        <p className="text-lg font-black text-[#4F46E5]">EGP {hotel.price || "---"}</p>
                       </div>
-                      <Button variant="ghost" className="text-[#4F46E5] font-black p-0 hover:bg-transparent">عرض <ArrowRight className="rotate-180 mr-1" size={16} /></Button>
+                      <Button variant="ghost" className="text-[#4F46E5] font-black p-0 hover:bg-transparent text-sm">التفاصيل <ArrowRight className="rotate-180 mr-1" size={14} /></Button>
                     </div>
                   </div>
                 </motion.div>

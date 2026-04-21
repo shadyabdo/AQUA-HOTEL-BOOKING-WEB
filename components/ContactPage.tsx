@@ -14,14 +14,14 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-10 pb-20">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-[#fcfcfd] pt-10 pb-20">
+      <div className="container-custom">
         {/* Header Section */}
         <div className="text-center mb-16">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-5xl font-black mb-4 text-[#4F46E5]"
+            className="text-4xl md:text-5xl lg:text-7xl font-black mb-4 text-[#151e63] tracking-tighter"
           >
             تواصل معنا
           </motion.h1>
@@ -34,7 +34,7 @@ export default function ContactPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-muted-foreground text-lg max-w-2xl mx-auto"
+            className="text-[#777aaf] text-base md:text-xl font-bold max-w-2xl mx-auto"
           >
             نحن هنا لمساعدتكم في أي وقت. لا تترددوا في التواصل معنا بخصوص أي استفسارات أو شكاوى.
           </motion.p>
@@ -48,8 +48,8 @@ export default function ContactPage() {
             transition={{ delay: 0.3 }}
             className="space-y-8"
           >
-            <div className="bg-card p-8 rounded-[2rem] shadow-xl border border-border/50 hover:border-[#4F46E5]/20 transition-all group">
-              <h2 className="text-2xl font-bold mb-8">معلومات التواصل</h2>
+            <div className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] shadow-xl border border-[#d6d6e7]/50 hover:border-[#4F46E5]/20 transition-all group">
+              <h2 className="text-xl md:text-2xl font-black text-[#151e63] mb-8">معلومات التواصل</h2>
 
               <div className="space-y-6">
                 <a href="https://wa.me/201210686336" target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 group/item hover:bg-muted/50 p-2 -mx-2 rounded-xl transition-all">
@@ -57,8 +57,8 @@ export default function ContactPage() {
                     <Phone size={24} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">اتصل بنا</p>
-                    <p className="font-bold text-lg" dir="ltr">01210686336</p>
+                    <p className="text-[10px] md:text-xs text-[#777aaf] font-black uppercase">اتصل بنا</p>
+                    <p className="font-black text-base md:text-lg text-[#151e63] break-all" dir="ltr">01210686336</p>
                   </div>
                 </a>
 
@@ -66,9 +66,9 @@ export default function ContactPage() {
                   <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary group-hover/item:bg-secondary group-hover/item:text-white transition-all">
                     <Mail size={24} />
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">البريد الإلكتروني</p>
-                    <p className="font-bold text-lg">shadyabdowd2020@gmail.com</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] md:text-xs text-[#777aaf] font-black uppercase">البريد الإلكتروني</p>
+                    <p className="font-black text-base md:text-lg text-[#151e63] break-all">shadyabdowd2020@gmail.com</p>
                   </div>
                 </a>
 
@@ -77,8 +77,8 @@ export default function ContactPage() {
                     <MapPin size={24} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">العنوان</p>
-                    <p className="font-bold text-lg">طنطا ، العجيزي ، مساكن الشباب</p>
+                    <p className="text-[10px] md:text-xs text-[#777aaf] font-black uppercase">العنوان</p>
+                    <p className="font-black text-base md:text-lg text-[#151e63]">طنطا ، العجيزي ، مساكن الشباب</p>
                   </div>
                 </div>
               </div>
@@ -122,52 +122,52 @@ export default function ContactPage() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-card p-10 rounded-[2rem] shadow-2xl border border-border"
+            className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-[#d6d6e7]/30"
           >
-            <h2 className="text-2xl font-bold mb-8 text-right">أرسل لنا رسالة</h2>
+            <h2 className="text-xl md:text-2xl font-black text-[#151e63] mb-8 text-right">أرسل لنا رسالة</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold mr-1">الاسم بالكامل</label>
+                  <label className="text-xs font-black text-[#151e63] mr-1 uppercase">الاسم بالكامل</label>
                   <Input
                     required
-                    className="h-14 bg-muted/30 border-none focus:ring-2 focus:ring-[#4F46E5]/50 text-right"
+                    className="h-14 bg-[#fcfcfd] border-[#d6d6e7]/50 focus:border-[#4F46E5] focus:ring-0 text-right rounded-2xl font-bold"
                     placeholder="أدخل اسمك"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold mr-1">البريد الإلكتروني</label>
+                  <label className="text-xs font-black text-[#151e63] mr-1 uppercase">البريد الإلكتروني</label>
                   <Input
                     required
                     type="email"
-                    className="h-14 bg-muted/30 border-none focus:ring-2 focus:ring-[#4F46E5]/50 text-right"
+                    className="h-14 bg-[#fcfcfd] border-[#d6d6e7]/50 focus:border-[#4F46E5] focus:ring-0 text-right rounded-2xl font-bold"
                     placeholder="example@mail.com"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold mr-1">الموضوع</label>
+                <label className="text-xs font-black text-[#151e63] mr-1 uppercase">الموضوع</label>
                 <Input
                   required
-                  className="h-14 bg-muted/30 border-none focus:ring-2 focus:ring-[#4F46E5]/50 text-right"
+                  className="h-14 bg-[#fcfcfd] border-[#d6d6e7]/50 focus:border-[#4F46E5] focus:ring-0 text-right rounded-2xl font-bold"
                   placeholder="كيف يمكننا مساعدتك؟"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-bold mr-1">الرسالة</label>
+                <label className="text-xs font-black text-[#151e63] mr-1 uppercase">الرسالة</label>
                 <Textarea
                   required
                   rows={6}
-                  className="bg-muted/30 border-none focus:ring-2 focus:ring-[#4F46E5]/50 text-right resize-none"
+                  className="bg-[#fcfcfd] border-[#d6d6e7]/50 focus:border-[#4F46E5] focus:ring-0 text-right rounded-[1.5rem] font-bold resize-none"
                   placeholder="اكتب رسالتك هنا..."
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-14 bg-[#4F46E5] text-[#4F46E5]-foreground font-black text-lg rounded-2xl hover:bg-[#4F46E5]/90 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-3"
+                className="w-full h-16 bg-[#4F46E5] text-white font-black text-lg rounded-2xl hover:bg-[#0f0b18] shadow-xl shadow-[#4F46E5]/20 transition-all flex items-center justify-center gap-3"
               >
                 إرسال الآن
                 <Send size={20} className="rotate-180" />

@@ -30,7 +30,7 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn(
         "group/calendar p-4 bg-white rounded-[5px] shadow-[0_20px_50px_rgba(79,70,229,0.1)] border border-[#4F46E5]/10",
-        "[--cell-radius:4px] [--cell-size:3rem]",
+        "[--cell-radius:8px] sm:[--cell-size:3rem] [--cell-size:2.2rem]",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className

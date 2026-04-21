@@ -176,12 +176,12 @@ function HomePage({ openBookingModal, user }: { openBookingModal: (id?: string, 
     <>
       <Hero />
       <BookingBar />
-      <section className="py-24 bg-white relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-            <div>
-              <div className="flex items-center gap-2 text-[#4F46E5] font-black uppercase tracking-widest text-xs mb-3"><div className="w-8 h-px bg-[#4F46E5]" /> اكتشف وجهاتنا</div>
-              <h2 className="text-3xl md:text-5xl font-black text-[#151e63] tracking-tighter">أين تذهب بعد ذلك؟</h2>
+      <section className="py-16 md:py-24 3xl:py-32 bg-white relative overflow-hidden">
+        <div className="container-custom relative">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 md:mb-16 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-[#4F46E5] font-black uppercase tracking-widest text-xs md:text-sm"><div className="w-8 h-px bg-[#4F46E5]" /> اكتشف وجهاتنا</div>
+              <h2 className="text-3xl md:text-5xl 3xl:text-6xl font-black text-[#151e63] tracking-tighter leading-[1.1]">أين تذهب بعد ذلك؟</h2>
             </div>
             
             {/* Navigation Arrows */}
@@ -203,16 +203,16 @@ function HomePage({ openBookingModal, user }: { openBookingModal: (id?: string, 
 
           <div 
             ref={sliderRef}
-            className="flex gap-10 overflow-x-auto pb-8 scrollbar-hide snap-x -mx-4 px-4 scroll-smooth"
+            className="flex gap-6 md:gap-10 overflow-x-auto pb-12 scrollbar-hide snap-x -mx-4 px-4 scroll-smooth"
           >
             {egyptCities.map((city, idx) => (
               <motion.div 
                 key={idx} 
-                className="min-w-[340px] md:min-w-[400px] h-[520px] relative rounded-[3rem] overflow-hidden cursor-pointer snap-start shadow-2xl shadow-[#e3dff0]/50 group border border-[#d6d6e7]/30" 
+                className="min-w-[260px] sm:min-w-[320px] md:min-w-[380px] 3xl:min-w-[450px] h-[380px] sm:h-[450px] md:h-[520px] 3xl:h-[600px] relative rounded-[2rem] md:rounded-[3rem] overflow-hidden cursor-pointer snap-start shadow-2xl shadow-[#e3dff0]/50 group border border-[#d6d6e7]/30" 
                 onClick={() => navigate(`/city/${city.name}`)}
               >
                 {/* Hotel Count Badge */}
-                <div className="absolute top-8 right-8 z-20 bg-white/90 backdrop-blur-md rounded-2xl px-5 py-2.5 text-[#4F46E5] font-black text-sm shadow-xl flex items-center gap-2 group-hover:scale-110 transition-transform">
+                <div className="absolute top-6 right-6 md:top-8 md:right-8 z-20 bg-white/90 backdrop-blur-md rounded-2xl px-4 py-2 md:px-5 md:py-2.5 text-[#4F46E5] font-black text-xs md:text-sm shadow-xl flex items-center gap-2 group-hover:scale-110 transition-transform">
                   <Star size={14} className="fill-current" />
                   {city.hotelCount || 0} فندق
                 </div>
@@ -220,11 +220,11 @@ function HomePage({ openBookingModal, user }: { openBookingModal: (id?: string, 
                 <img src={city.city_img || city.image} className="w-full h-full object-cover group-hover:scale-125 transition-transform duration-[1.5s] ease-out" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#151e63] via-[#151e63]/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
                 
-                <div className="absolute bottom-12 right-12 left-12 text-white z-10">
-                  <h3 className="text-2xl md:text-4xl font-black mb-3 tracking-tighter group-hover:translate-x-2 transition-transform">{city.name}</h3>
-                  <div className="flex items-center gap-3 group/btn">
-                    <span className="text-sm font-black uppercase tracking-widest opacity-80 group-hover:opacity-100">عرض الوجهات</span>
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center group-hover/btn:bg-[#4F46E5] transition-all group-hover:scale-110"><ChevronLeft className="h-5 w-5" /></div>
+                <div className="absolute bottom-8 sm:bottom-12 right-8 sm:right-12 left-8 sm:left-12 text-white z-10">
+                  <h3 className="text-xl sm:text-2xl md:text-4xl font-black mb-2 sm:mb-3 tracking-tighter group-hover:translate-x-2 transition-transform">{city.name}</h3>
+                  <div className="flex items-center gap-2 sm:gap-3 group/btn">
+                    <span className="text-[10px] sm:text-sm font-black uppercase tracking-widest opacity-80 group-hover:opacity-100">عرض الوجهات</span>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center group-hover/btn:bg-[#4F46E5] transition-all group-hover:scale-110"><ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" /></div>
                   </div>
                 </div>
               </motion.div>
@@ -233,16 +233,16 @@ function HomePage({ openBookingModal, user }: { openBookingModal: (id?: string, 
         </div>
       </section>
 
-      <section className="py-24 bg-[#fcfcfd]">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-end mb-16 gap-6">
-            <div><h2 className="text-2xl md:text-4xl font-black text-[#151e63] tracking-tighter">وصل حديثاً</h2></div>
-            <Button variant="ghost" onClick={() => navigate("/rooms")} className="text-[#4F46E5] font-black hover:bg-[#e8e5f0] gap-2 rounded-xl h-12 px-6">عرض الكل <ArrowRight className="rotate-180" size={18} /></Button>
+      <section className="py-20 md:py-24 3xl:py-32 bg-[#fcfcfd]">
+        <div className="container-custom">
+          <div className="flex justify-between items-end mb-12 md:mb-16 gap-6">
+            <div><h2 className="text-2xl md:text-4xl 3xl:text-5xl font-black text-[#151e63] tracking-tighter">وصل حديثاً</h2></div>
+            <Button variant="ghost" onClick={() => navigate("/rooms")} className="text-[#4F46E5] font-black hover:bg-[#e8e5f0] gap-2 rounded-xl h-11 md:h-12 px-5 md:px-6">عرض الكل <ArrowRight className="rotate-180" size={18} /></Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 3xl:grid-cols-5 gap-6 md:gap-8 xl:gap-10">
             {latestHotels.map((hotel) => (
               <div key={hotel.id} className="modern-card group cursor-pointer flex flex-col" onClick={() => navigate(`/hotel/${hotel.cityId}/${hotel.id}`)}>
-                <div className="h-80 overflow-hidden relative">
+                <div className="h-64 sm:h-80 overflow-hidden relative">
                   <img src={hotel.images?.[0] || "https://picsum.photos/seed/hotel/800/600"} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   <button onClick={(e) => handleToggleFavorite(e, hotel)} className={cn("absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all z-10", favorites.includes(hotel.id) ? "bg-red-500 text-white" : "bg-white/90 backdrop-blur-md text-[#777aaf] hover:text-red-500 hover:scale-110")}><Heart size={18} className={cn(favorites.includes(hotel.id) && "fill-current")} /></button>
                 </div>
@@ -279,7 +279,7 @@ export default function App() {
       <Toaster position="top-center" richColors dir="rtl" toastOptions={{ style: { fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold', padding: '16px 20px', borderRadius: '12px' }, className: 'flex-row-reverse text-right' }} />
       <Elements stripe={stripePromise}>
         <Router>
-          <div className="min-h-screen bg-white selection:bg-[#4F46E5] selection:text-white">
+          <div className="min-h-screen bg-white selection:bg-[#4F46E5] selection:text-white overflow-x-hidden relative">
             <Navbar />
             <main>
               <Routes>

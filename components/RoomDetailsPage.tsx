@@ -27,7 +27,8 @@ const getAmenityIcon = (text: string) => {
   if (t.includes("بياضات") || t.includes("سرير") || t.includes("bed")) return <Bed size={16} />;
   return <Zap size={16} />;
 };
-import { cn } from "../lib/utils";
+
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +44,7 @@ import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 export default function RoomDetailsPage() {
-  const { cityId, id, roomId } = useParams(); // Matches route: /hotel/:cityId/:id/room/:roomId
+  const { cityId, id, roomId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const stripe = useStripe();
@@ -90,19 +91,15 @@ export default function RoomDetailsPage() {
       if (!cityId || !id || !roomId) return;
       try {
         setLoading(true);
-        
-        // 1. Fetch Hotel
         const hotelRef = doc(db, "cities", cityId, "hotels", id);
         const hotelSnap = await getDoc(hotelRef);
         
         if (!hotelSnap.exists()) {
-          console.error("Hotel not found at path:", hotelRef.path);
           setLoading(false);
           return;
         }
         setHotel({ id: hotelSnap.id, ...hotelSnap.data() });
 
-        // 2. Fetch Room (Robust multi-path approach)
         let roomData = null;
         let finalRoomId = roomId;
 
@@ -122,7 +119,7 @@ export default function RoomDetailsPage() {
               finalRoomId = snap.id;
               break;
             }
-          } catch (e) { /* ignore */ }
+          } catch (e) { }
         }
         
         if (roomData) {
@@ -145,8 +142,6 @@ export default function RoomDetailsPage() {
             bed: roomData.bed || roomData.Room_bed || roomData.bedType || 'غير محدد',
             level: roomData.level || roomData.Room_level || roomData.الإطلالة || roomData.view || 'ستاندرد'
           });
-        } else {
-          console.error("Room not found with ID:", roomId);
         }
       } catch (error) { 
         console.error("Error fetching room/hotel:", error); 
@@ -160,16 +155,12 @@ export default function RoomDetailsPage() {
   const calculateTotal = () => {
     if (!room) return 0;
     const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
-    const base = (parseFloat(String(room.price)) || 0) * nights;
-    return base;
+    return (parseFloat(String(room.price)) || 0) * nights;
   };
 
   const calculateDiscountedTotal = () => {
     const base = calculateTotal();
-    if (appliedDiscount) {
-      return base - (base * (appliedDiscount.percentage / 100));
-    }
-    return base;
+    return appliedDiscount ? base - (base * (appliedDiscount.percentage / 100)) : base;
   };
 
   const applyCoupon = async () => {
@@ -178,23 +169,17 @@ export default function RoomDetailsPage() {
     try {
       const q = query(collection(db, 'coupons'), where('code', '==', couponCode.trim().toUpperCase()));
       const snap = await getDocs(q);
-      
       if (snap.empty) {
         showError("خطأ", "كود الخصم غير صحيح");
         setAppliedDiscount(null);
         return;
       }
-
       const couponData = snap.docs[0].data();
-      
-      // Check if active
       if (couponData.isActive === false) {
         showError("تنبيه", "هذا الكوبون معطل حالياً");
         setAppliedDiscount(null);
         return;
       }
-
-      // Check expiry if exists
       if (couponData.expiryDate) {
         const expiry = new Date(couponData.expiryDate);
         if (expiry < new Date()) {
@@ -203,7 +188,6 @@ export default function RoomDetailsPage() {
           return;
         }
       }
-
       setAppliedDiscount({ code: couponData.code, percentage: couponData.discountPercentage || 0 });
       showSuccess("تم!", `تم تطبيق خصم ${couponData.discountPercentage}% بنجاح!`);
     } catch (e) {
@@ -215,125 +199,54 @@ export default function RoomDetailsPage() {
 
   const handleSubmit = async () => {
     if (!auth.currentUser) { 
-      try { 
-        await signInWithPopup(auth, new GoogleAuthProvider()); 
-      } catch (e) { 
-        return; 
-      } 
+      try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { return; } 
     }
-    
     setIsSubmitting(true);
     setPaymentError(null);
-    
     try {
-      const totalAmount = calculateDiscountedTotal() + 120; // Include taxes
-      
+      const totalAmount = calculateDiscountedTotal() + 120;
       if (paymentMethod === 'wallet') {
-        if (walletBalance < totalAmount) {
-          throw new Error("رصيد المحفظة غير كافٍ. يرجى شحن الرصيد أولاً.");
-        }
-        
-        // Deduct from wallet
+        if (walletBalance < totalAmount) throw new Error("رصيد المحفظة غير كافٍ.");
         await updateUserBalance(auth.currentUser.uid, -totalAmount);
-        
         const bookingData = { 
-          userId: auth.currentUser?.uid, 
-          hotelId: id, 
-          roomId: room.id, 
-          roomTitle: room.title, 
-          checkIn: checkIn.toISOString(), 
-          checkOut: checkOut.toISOString(), 
-          guestName: guestDetails.name, 
-          guestEmail: guestDetails.email, 
-          guestPhone: guestDetails.phone, 
-          guests: parseInt(guestCount), 
-          price: totalAmount, 
-          paymentMethod: "محفظة الموقع",
-          status: 'confirmed'
+          userId: auth.currentUser?.uid, hotelId: id, roomId: room.id, roomTitle: room.title, 
+          checkIn: checkIn.toISOString(), checkOut: checkOut.toISOString(), 
+          guestName: guestDetails.name, guestEmail: guestDetails.email, guestPhone: guestDetails.phone, 
+          guests: parseInt(guestCount), price: totalAmount, paymentMethod: "محفظة الموقع", status: 'confirmed'
         };
-        
         const bookingId = await createBooking(bookingData);
-        await addTransaction(auth.currentUser!.uid, {
-          type: 'booking',
-          amount: totalAmount,
-          description: `حجز غرفة: ${room.title}`,
-          method: 'محفظة الموقع'
-        });
+        await addTransaction(auth.currentUser!.uid, { type: 'booking', amount: totalAmount, description: `حجز غرفة: ${room.title}`, method: 'محفظة الموقع' });
         setLastBooking({ ...bookingData, id: bookingId, createdAt: new Date().toISOString() });
         setIsSuccess(true);
         showSuccess("تم الحجز!", "تم الحجز بنجاح باستخدام المحفظة!");
       } else {
-        // Stripe Payment
         if (!stripe || !elements) return;
-        const response = await fetch("/api/create-payment-intent", { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json" }, 
-          body: JSON.stringify({ amount: totalAmount }) 
-        });
-        
+        const response = await fetch("/api/create-payment-intent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: totalAmount }) });
         const { clientSecret } = await response.json();
         const cardElement = elements.getElement(CardElement);
-        
-        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, { 
-          payment_method: { 
-            card: cardElement!, 
-            billing_details: { name: guestDetails.name, email: guestDetails.email } 
-          } 
-        });
-        
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, { payment_method: { card: cardElement!, billing_details: { name: guestDetails.name, email: guestDetails.email } } });
         if (stripeError) throw new Error(stripeError.message);
-        
         if (paymentIntent?.status === "succeeded") {
           const bookingData = { 
-            userId: auth.currentUser?.uid, 
-            hotelId: id, 
-            roomId: room.id, 
-            roomTitle: room.title, 
-            checkIn: checkIn.toISOString(), 
-            checkOut: checkOut.toISOString(), 
-            guestName: guestDetails.name, 
-            guestEmail: guestDetails.email, 
-            guestPhone: guestDetails.phone, 
-            guests: parseInt(guestCount), 
-            price: totalAmount, 
-            paymentMethod: "بطاقة ائتمان (Stripe)",
-            status: 'confirmed'
+            userId: auth.currentUser?.uid, hotelId: id, roomId: room.id, roomTitle: room.title, 
+            checkIn: checkIn.toISOString(), checkOut: checkOut.toISOString(), 
+            guestName: guestDetails.name, guestEmail: guestDetails.email, guestPhone: guestDetails.phone, 
+            guests: parseInt(guestCount), price: totalAmount, paymentMethod: "بطاقة ائتمان (Stripe)", status: 'confirmed'
           };
-          
           const bookingId = await createBooking(bookingData);
-          await addTransaction(auth.currentUser!.uid, {
-            type: 'booking',
-            amount: totalAmount,
-            description: `حجز غرفة: ${room.title}`,
-            method: 'بطاقة ائتمان (Stripe)'
-          });
+          await addTransaction(auth.currentUser!.uid, { type: 'booking', amount: totalAmount, description: `حجز غرفة: ${room.title}`, method: 'بطاقة ائتمان (Stripe)' });
           setLastBooking({ ...bookingData, id: bookingId, createdAt: new Date().toISOString() });
           setIsSuccess(true);
           showSuccess("تم الحجز!", "تم الحجز بنجاح!");
         }
       }
     } catch (error: any) { 
-      setPaymentError(error.message); 
-      showError("فشل الحجز", error.message); 
-    } finally { 
-      setIsSubmitting(false); 
-    }
+      setPaymentError(error.message); showError("فشل الحجز", error.message); 
+    } finally { setIsSubmitting(false); }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#fcfcfd]"><div className="w-16 h-16 border-8 border-[#4F46E5] border-t-transparent rounded-full animate-spin" /></div>;
-  
-  if (!room) return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center space-y-6">
-       <div className="w-20 h-20 bg-[#f5f5fa] rounded-full flex items-center justify-center text-[#777aaf]">
-          <Info size={40} />
-       </div>
-       <div>
-          <h2 className="text-3xl font-black text-[#151e63] mb-2">الغرفة غير موجودة</h2>
-          <p className="text-[#777aaf] font-medium">عذراً، لم نتمكن من العثور على بيانات الغرفة المطلوبة.</p>
-       </div>
-       <Button onClick={() => navigate("/")} className="action-button px-10">العودة للرئيسية</Button>
-    </div>
-  );
+  if (!room) return <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center space-y-6"> <div className="w-20 h-20 bg-[#f5f5fa] rounded-full flex items-center justify-center text-[#777aaf]"> <Info size={40} /> </div> <div> <h2 className="text-3xl font-black text-[#151e63] mb-2">الغرفة غير موجودة</h2> <p className="text-[#777aaf] font-medium">عذراً، لم نتمكن من العثور على بيانات الغرفة المطلوبة.</p> </div> <Button onClick={() => navigate("/")} className="action-button px-10">العودة للرئيسية</Button> </div>;
 
   if (isSuccess && lastBooking) return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-[#fcfcfd]">
@@ -351,23 +264,43 @@ export default function RoomDetailsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-       <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-             <div className="lg:col-span-8 space-y-12">
-                <div className="relative h-[600px] rounded-[3rem] overflow-hidden shadow-2xl group border border-[#d6d6e7]/50">
-                   <img src={room.images[currentImageIndex]} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-                   <div className="absolute inset-0 bg-gradient-to-t from-[#151e63]/60 to-transparent" />
-                   <div className="absolute bottom-10 right-10 left-10 text-white">
-                      <div className="flex items-center gap-3 mb-4">
-                         <span className="badge-indigo bg-white/20 backdrop-blur-md text-white border-white/20 w-fit inline-flex items-center gap-2">
-                            <Zap size={14} className="fill-current" />
+    <div className="min-h-screen bg-[#fcfcfd] overflow-x-clip pb-24 md:pb-32">
+       <div className="container-custom py-8 md:py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
+             <div className="lg:col-span-8 space-y-8 md:space-y-12">
+                <div className="relative h-[320px] sm:h-[450px] md:h-[550px] 3xl:h-[700px] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl group border border-[#d6d6e7]/50 bg-black">
+                   <AnimatePresence mode="wait">
+                      <motion.img 
+                        key={currentImageIndex}
+                        src={room.images[currentImageIndex]} 
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        onDragEnd={(_, info) => {
+                          const swipeThreshold = 50;
+                          if (info.offset.x > swipeThreshold) {
+                            setCurrentImageIndex(p => p === room.images.length - 1 ? 0 : p + 1);
+                          } else if (info.offset.x < -swipeThreshold) {
+                            setCurrentImageIndex(p => p === 0 ? room.images.length - 1 : p - 1);
+                          }
+                        }}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 cursor-grab active:cursor-grabbing" 
+                      />
+                   </AnimatePresence>
+                   <div className="absolute inset-0 bg-gradient-to-t from-[#151e63]/90 via-[#151e63]/40 to-transparent" />
+                   <div className="absolute bottom-6 md:bottom-12 right-6 md:right-12 left-6 md:left-12 text-white">
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3 md:mb-5">
+                         <span className="badge-indigo bg-white/20 backdrop-blur-md text-white border-white/20 w-fit inline-flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs 3xl:text-sm uppercase tracking-widest font-black">
+                            <Zap size={12} className="md:size-4 fill-current" />
                             {room.level || room.الإطلالة || 'ستاندرد'}
                          </span>
-                         <span className="flex items-center gap-1 text-[#ffb700] font-black"><Star size={16} className="fill-current" /> {room.rating || 4.9}</span>
+                         <span className="flex items-center gap-1.5 text-[#ffb700] font-black text-sm md:text-lg"><Star size={16} className="md:size-5 fill-current" /> {room.rating || 4.9}</span>
                       </div>
-                      <h1 className="text-2xl md:text-5xl font-black tracking-tighter mb-2">{room.title}</h1>
-                      <p className="text-white/80 font-medium flex items-center gap-2 font-black"><MapPin size={18} /> {hotel?.name}، {hotel?.location}</p>
+                      <h1 className="text-2xl sm:text-3xl md:text-5xl 3xl:text-7xl font-black tracking-tighter mb-2 md:mb-4 leading-[1.1] md:leading-tight">{room.title}</h1>
+                      <p className="text-white/80 font-black text-xs md:text-lg flex items-center gap-2"><MapPin size={16} className="md:size-5 text-[#4F46E5]" /> {hotel?.name}، {hotel?.location}</p>
                    </div>
                    {room.images.length > 1 && (
                       <div className="absolute top-1/2 left-6 right-6 -translate-y-1/2 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity">
@@ -377,39 +310,40 @@ export default function RoomDetailsPage() {
                    )}
                 </div>
 
-                <div className="bg-white rounded-[2.5rem] p-10 border border-[#d6d6e7]/50 shadow-xl shadow-indigo-50/50">
-                   <h3 className="text-3xl font-black text-[#151e63] mb-8">مواصفات الغرفة</h3>
-                   <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
+                <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] p-6 md:p-10 3xl:p-14 border border-[#d6d6e7]/50 shadow-xl shadow-indigo-50/50">
+                   <h3 className="text-xl md:text-3xl 3xl:text-4xl font-black text-[#151e63] mb-8 md:mb-10 tracking-tighter">مواصفات الغرفة</h3>
+                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-8 xl:gap-12">
                       {[
-                        { icon: <Maximize size={24} />, label: "المساحة", value: `${room.size || 0} م²` },
-                        { icon: <Users size={24} />, label: "الضيوف", value: `${room.guests || 2} أشخاص` },
-                        { icon: <BedDouble size={24} />, label: "الأسرّة", value: room.bed || 0 },
-                        { icon: <Cigarette size={24} />, label: "التدخين", value: room.isSmokingAllowed ? "مسموح" : "ممنوع" },
-                        { icon: <ShieldCheck size={24} />, label: "الإلغاء", value: "مجاني" }
+                        { icon: <Maximize size={28} />, label: "المساحة", value: `${room.size || 0} م²` },
+                        { icon: <Users size={28} />, label: "الضيوف", value: `${room.guests || 2} أشخاص` },
+                        { icon: <BedDouble size={28} />, label: "الأسرّة", value: room.bed || 0 },
+                        { icon: <Cigarette size={28} />, label: "التدخين", value: room.isSmokingAllowed ? "مسموح" : "ممنوع" },
+                        { icon: <ShieldCheck size={28} />, label: "الإلغاء", value: "مجاني" }
                       ].map((item, i) => (
-                        <div key={i} className="space-y-2 text-right flex flex-col items-end">
-                           <div className="text-[#4F46E5]">{item.icon}</div>
-                           <p className="text-xs font-black text-[#777aaf] uppercase tracking-widest">{item.label}</p>
-                           <p className="font-black text-[#151e63]">{item.value}</p>
+                        <div key={i} className="space-y-2 md:space-y-3 text-right flex flex-col items-start group/item">
+                           <div className="text-[#4F46E5] scale-90 md:scale-100 group-hover/item:scale-110 transition-transform">{item.icon}</div>
+                           <div>
+                            <p className="text-[10px] md:text-xs font-black text-[#777aaf] uppercase tracking-widest mb-0.5 md:mb-1">{item.label}</p>
+                            <p className="font-black text-[#151e63] text-sm md:text-lg">{item.value}</p>
+                           </div>
                         </div>
                       ))}
                    </div>
-                    <div className="mt-12 pt-12 border-t border-[#d6d6e7]/30">
-                      <h4 className="text-xl font-black text-[#151e63] mb-6 flex items-center justify-start gap-2">
-                         <Eye className="text-[#4F46E5]" size={24} />
+                   <div className="mt-8 md:mt-12 pt-8 md:pt-12 border-t border-[#d6d6e7]/30">
+                      <h4 className="text-lg md:text-xl font-black text-[#151e63] mb-4 md:mb-6 flex items-center justify-start gap-2">
+                         <Eye className="text-[#4F46E5]" size={20} />
                          <span>الإطلالة</span>
                       </h4>
-                      <p className="text-[#5a5e9a] font-medium leading-relaxed text-lg text-right">{room.description}</p>
+                      <p className="text-[#5a5e9a] font-medium leading-relaxed text-base md:text-lg text-right">{room.description}</p>
                     </div>
-
-                    {room.amenities && room.amenities.length > 0 && (
-                      <div className="mt-12 pt-12 border-t border-[#d6d6e7]/30">
-                        <h4 className="text-xl font-black text-[#151e63] mb-6">مرافق الغرفة</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                   {room.amenities && room.amenities.length > 0 && (
+                      <div className="mt-8 md:mt-12 pt-8 md:pt-12 border-t border-[#d6d6e7]/30">
+                        <h4 className="text-lg md:text-xl font-black text-[#151e63] mb-4 md:mb-6">مرافق الغرفة</h4>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                           {room.amenities.map((amenity: string, idx: number) => (
-                            <div key={idx} className="flex items-center gap-3 bg-[#fcfcfd] p-4 rounded-2xl border border-[#d6d6e7]/50 shadow-sm text-[#151e63]">
-                              <div className="text-[#4F46E5]">{getAmenityIcon(amenity)}</div>
-                              <span className="font-bold text-sm">{amenity}</span>
+                            <div key={idx} className="flex items-center gap-2 md:gap-3 bg-[#fcfcfd] p-3 md:p-4 rounded-xl md:rounded-2xl border border-[#d6d6e7]/50 shadow-sm text-[#151e63]">
+                              <div className="text-[#4F46E5] scale-90 md:scale-100">{getAmenityIcon(amenity)}</div>
+                              <span className="font-bold text-xs md:text-sm">{amenity}</span>
                             </div>
                           ))}
                         </div>
@@ -417,77 +351,77 @@ export default function RoomDetailsPage() {
                     )}
                 </div>
 
-                <div className="bg-white rounded-[2.5rem] p-10 border border-[#d6d6e7]/50 shadow-xl shadow-indigo-50/50">
-                   <h3 className="text-3xl font-black text-[#151e63] mb-8">تفاصيل الضيف</h3>
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-2"><Label className="text-xs font-black text-[#777aaf]">الاسم الكامل</Label><Input className="h-14 rounded-2xl border-[#d6d6e7]/50" value={guestDetails.name} onChange={e => setGuestDetails(p => ({ ...p, name: e.target.value }))} /></div>
-                      <div className="space-y-2"><Label className="text-xs font-black text-[#777aaf]">البريد الإلكتروني</Label><Input className="h-14 rounded-2xl border-[#d6d6e7]/50" value={guestDetails.email} onChange={e => setGuestDetails(p => ({ ...p, email: e.target.value }))} /></div>
-                      <div className="space-y-2"><Label className="text-xs font-black text-[#777aaf]">رقم الهاتف</Label><Input className="h-14 rounded-2xl border-[#d6d6e7]/50" value={guestDetails.phone} onChange={e => setGuestDetails(p => ({ ...p, phone: e.target.value }))} /></div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-black text-[#777aaf]">عدد الضيوف</Label>
-                        <Select value={guestCount} onValueChange={setGuestCount}><SelectTrigger className="h-14 rounded-2xl border-[#d6d6e7]/50"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="1">1</SelectItem><SelectItem value="2">2</SelectItem><SelectItem value="3">3</SelectItem></SelectContent></Select>
+                <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] p-6 md:p-10 3xl:p-14 border border-[#d6d6e7]/50 shadow-xl shadow-indigo-50/50">
+                   <h3 className="text-xl md:text-3xl 3xl:text-4xl font-black text-[#151e63] mb-8 md:mb-10 tracking-tighter">تفاصيل الضيف</h3>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
+                      <div className="space-y-2 md:space-y-3"><Label className="text-[10px] md:text-xs font-black text-[#777aaf] uppercase tracking-widest mr-1">الاسم الكامل</Label><Input className="h-14 md:h-16 rounded-2xl border-[#d6d6e7]/50 px-6 font-bold bg-[#fcfcfd]" value={guestDetails.name} onChange={e => setGuestDetails(p => ({ ...p, name: e.target.value }))} /></div>
+                      <div className="space-y-2 md:space-y-3"><Label className="text-[10px] md:text-xs font-black text-[#777aaf] uppercase tracking-widest mr-1">البريد الإلكتروني</Label><Input className="h-14 md:h-16 rounded-2xl border-[#d6d6e7]/50 px-6 font-bold bg-[#fcfcfd]" value={guestDetails.email} onChange={e => setGuestDetails(p => ({ ...p, email: e.target.value }))} /></div>
+                      <div className="space-y-2 md:space-y-3"><Label className="text-[10px] md:text-xs font-black text-[#777aaf] uppercase tracking-widest mr-1">رقم الهاتف</Label><Input className="h-14 md:h-16 rounded-2xl border-[#d6d6e7]/50 px-6 font-bold text-left bg-[#fcfcfd]" value={guestDetails.phone} onChange={e => setGuestDetails(p => ({ ...p, phone: e.target.value }))} /></div>
+                      <div className="space-y-2 md:space-y-3">
+                        <Label className="text-[10px] md:text-xs font-black text-[#777aaf] uppercase tracking-widest mr-1">عدد الضيوف</Label>
+                        <Select value={guestCount} onValueChange={setGuestCount}><SelectTrigger className="h-14 md:h-16 rounded-2xl border-[#d6d6e7]/50 px-6 font-bold bg-[#fcfcfd]"><SelectValue /></SelectTrigger><SelectContent className="rounded-2xl"><SelectItem value="1">1</SelectItem><SelectItem value="2">2</SelectItem><SelectItem value="3">3</SelectItem></SelectContent></Select>
                       </div>
                    </div>
                 </div>
              </div>
 
-             <div className="lg:col-span-4">
-                <div className="sticky top-32 bg-[#080c27] rounded-[2.5rem] p-10 text-white shadow-2xl overflow-hidden">
-                   <div className="absolute top-0 left-0 w-32 h-32 bg-[#4F46E5]/20 blur-3xl rounded-full -ml-16 -mt-16" />
-                   <h3 className="text-2xl font-black mb-8 relative z-10">ملخص الحجز</h3>
+             <div className="lg:col-span-4 mt-4 lg:mt-0">
+                <div className="lg:sticky lg:top-32 bg-[#080c27] rounded-[2rem] sm:rounded-[2.5rem] md:rounded-[3.5rem] p-4 sm:p-6 md:p-10 text-white shadow-2xl overflow-hidden border border-white/5">
+                   <div className="absolute top-0 left-0 w-32 h-32 bg-[#4F46E5]/30 blur-[80px] rounded-full -ml-16 -mt-16" />
+                   <h3 className="text-xl md:text-2xl font-black mb-8 relative z-10 tracking-tighter">ملخص الحجز</h3>
                    <div className="space-y-6 relative z-10">
                       <Popover>
-                        <PopoverTrigger className="w-full flex justify-between items-center bg-white/5 p-5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors text-right">
-                             <div><p className="text-[10px] text-[#b6b7d5] font-black uppercase mb-1">الوصول</p><p className="font-black text-sm">{format(checkIn, "d MMM yyyy", { locale: ar })}</p></div>
-                             <ArrowLeft size={20} className="text-[#4F46E5]" />
-                             <div className="text-left"><p className="text-[10px] text-[#b6b7d5] font-black uppercase mb-1">المغادرة</p><p className="font-black text-sm">{format(checkOut, "d MMM yyyy", { locale: ar })}</p></div>
+                        <PopoverTrigger className="w-full flex justify-between items-center bg-white/10 p-5 rounded-2xl border border-white/10 hover:bg-white/20 transition-all text-right shadow-inner">
+                             <div className="min-w-0 flex-1"><p className="text-[9px] text-white/50 font-black uppercase mb-1 tracking-widest">الوصول</p><p className="font-black text-sm md:text-base truncate">{format(checkIn, "d MMM yyyy", { locale: ar })}</p></div>
+                             <div className="px-4"><ArrowLeft size={20} className="text-[#4F46E5] animate-pulse" /></div>
+                             <div className="text-left min-w-0 flex-1"><p className="text-[9px] text-white/50 font-black uppercase mb-1 tracking-widest">المغادرة</p><p className="font-black text-sm md:text-base truncate">{format(checkOut, "d MMM yyyy", { locale: ar })}</p></div>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 rounded-3xl" align="center">
+                        <PopoverContent className="w-[calc(100vw-2rem)] sm:w-auto p-0 rounded-3xl border-none shadow-2xl" align="center" sideOffset={10}>
                           <Calendar mode="range" selected={{ from: checkIn, to: checkOut }} onSelect={(range: any) => { if(range?.from) setCheckIn(range.from); if(range?.to) setCheckOut(range.to); }} numberOfMonths={1} locale={ar} className="p-3" />
                         </PopoverContent>
                       </Popover>
-                      <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10 mt-3">
+                      
+                      <div className="flex justify-between items-center bg-white/10 p-4 rounded-2xl border border-white/10 mt-3">
                           <div className="flex items-center gap-2">
                              <Users size={16} className="text-[#4F46E5]" />
-                             <span className="text-[12px] text-[#b6b7d5] font-black uppercase">عدد الضيوف</span>
+                             <span className="text-[11px] text-white/60 font-black uppercase tracking-wider">عدد الضيوف</span>
                           </div>
                           <Select value={guestCount} onValueChange={setGuestCount}>
-                            <SelectTrigger className="w-24 h-8 bg-transparent border-none text-white font-black p-0 shadow-none focus:ring-0 text-left justify-end flex-row-reverse gap-2"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="1">1 ضيف</SelectItem><SelectItem value="2">2 ضيوف</SelectItem><SelectItem value="3">3 ضيوف</SelectItem><SelectItem value="4">4 ضيوف</SelectItem><SelectItem value="5">5 ضيوف</SelectItem></SelectContent>
+                            <SelectTrigger className="w-24 h-8 bg-transparent border-none text-white font-black p-0 shadow-none focus:ring-0 text-left justify-end flex-row-reverse gap-2 text-sm"><SelectValue /></SelectTrigger>
+                            <SelectContent className="rounded-xl"><SelectItem value="1">1 ضيف</SelectItem><SelectItem value="2">2 ضيوف</SelectItem><SelectItem value="3">3 ضيوف</SelectItem><SelectItem value="4">4 ضيوف</SelectItem><SelectItem value="5">5 ضيوف</SelectItem></SelectContent>
                           </Select>
                       </div>
-                       <div className="space-y-4 pt-4">
-                         <div className="flex justify-between text-sm text-[#b6b7d5] font-bold"><span>سعر الليلة:</span><span className="text-white">EGP {room.price}</span></div>
-                         <div className="flex justify-between text-sm text-[#b6b7d5] font-bold"><span>عدد الليالي:</span><span className="text-white">{Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)))}</span></div>
+
+                      <div className="space-y-4 pt-4 border-t border-white/10">
+                         <div className="flex justify-between text-sm text-white/70 font-bold"><span>سعر الليلة:</span><span className="text-white font-black">EGP {room.price}</span></div>
+                         <div className="flex justify-between text-sm text-white/70 font-bold"><span>عدد الليالي:</span><span className="text-white font-black">{Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)))} ليلة</span></div>
                          
                          {appliedDiscount && (
-                           <div className="flex justify-between text-sm text-green-400 font-bold">
+                           <div className="flex justify-between text-sm text-emerald-400 font-black bg-emerald-400/10 p-2 rounded-lg border border-emerald-400/20">
                              <span>خصم الكوبون ({appliedDiscount.percentage}%):</span>
-                             <span>- EGP {(calculateTotal() * (appliedDiscount.percentage / 100)).toFixed(2)}</span>
+                             <span dir="ltr">- EGP {(calculateTotal() * (appliedDiscount.percentage / 100)).toFixed(0)}</span>
                            </div>
                          )}
+
+                         <div className="flex justify-between text-sm text-white/70 font-bold border-t border-white/10 pt-4"><span>الضرائب والرسوم:</span><span className="text-white font-black">EGP 120</span></div>
                          
-                         <div className="flex justify-between text-sm text-[#b6b7d5] font-bold border-t border-white/10 pt-4"><span>الضرائب والرسوم:</span><span className="text-white">EGP 120</span></div>
-                         <div className="flex justify-between items-baseline pt-4">
-                            <span className="text-xl font-black">الإجمالي</span>
-                            <span className="text-3xl font-black text-[#818cf8] tracking-tighter">EGP {calculateDiscountedTotal() + 120}</span>
+                         <div className="flex justify-between items-center pt-4 border-t border-white/20">
+                            <span className="text-xl font-black tracking-tighter">الإجمالي</span>
+                            <div className="text-right">
+                               <span className="text-3xl font-black text-[#818cf8] tracking-tighter">EGP {calculateDiscountedTotal() + 120}</span>
+                               <p className="text-[10px] text-white/40 font-bold">شامل كافة الرسوم</p>
+                            </div>
                          </div>
                       </div>
 
                       <div className="pt-6 space-y-4 border-t border-white/10">
-                         <Label className="text-xs font-black uppercase text-[#b6b7d5] flex items-center gap-2"><Ticket size={16} /> لديك كود خصم؟</Label>
-                         <div className="flex gap-2">
-                           <Input 
-                             value={couponCode} 
-                             onChange={(e) => setCouponCode(e.target.value)} 
-                             placeholder="أدخل كود الخصم هنا" 
-                             className="h-12 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-[#4F46E5]" 
-                             disabled={appliedDiscount !== null}
-                           />
+                         <Label className="text-[10px] font-black uppercase text-white/60 flex items-center gap-2 tracking-widest"><Ticket size={14} /> لديك كود خصم؟</Label>
+                         <div className="flex flex-col xs:flex-row gap-2">
+                           <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="الكود..." className="h-12 w-full xs:flex-1 bg-white/10 border border-white/10 rounded-xl px-4 text-white placeholder:text-white/30 focus:border-[#4F46E5] outline-none text-sm font-bold" disabled={appliedDiscount !== null} />
                            {appliedDiscount ? (
-                             <Button onClick={() => { setAppliedDiscount(null); setCouponCode(""); }} variant="destructive" className="h-12 px-4 rounded-xl font-black">إزالة</Button>
+                             <Button onClick={() => { setAppliedDiscount(null); setCouponCode(""); }} variant="destructive" className="h-12 w-full xs:w-auto px-4 rounded-xl font-black text-xs">إزالة</Button>
                            ) : (
-                             <Button onClick={applyCoupon} disabled={isApplyingCoupon || !couponCode.trim()} className="h-12 px-6 rounded-xl bg-white text-[#151e63] hover:bg-gray-200 font-black">
+                             <Button onClick={applyCoupon} disabled={isApplyingCoupon || !couponCode.trim()} className="h-12 w-full xs:w-auto px-6 rounded-xl bg-white text-[#080c27] hover:bg-[#4F46E5] hover:text-white transition-all font-black text-sm shadow-lg whitespace-nowrap">
                                {isApplyingCoupon ? "..." : "تطبيق"}
                              </Button>
                            )}
@@ -496,55 +430,39 @@ export default function RoomDetailsPage() {
 
                       <div className="pt-8 space-y-8">
                          <div className="space-y-4">
-                            <Label className="text-xs font-black uppercase text-[#b6b7d5] flex items-center gap-2">اختر طريقة الدفع</Label>
-                            <div className="grid grid-cols-2 gap-4">
-                               <button 
-                                 onClick={() => setPaymentMethod('card')}
-                                 className={cn(
-                                   "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                                   paymentMethod === 'card' ? "border-[#4F46E5] bg-[#4F46E5]/10 text-white" : "border-white/10 text-[#b6b7d5] hover:border-white/20"
-                                 )}
-                               >
+                            <Label className="text-[10px] font-black uppercase text-white/60 flex items-center gap-2 tracking-widest">اختر طريقة الدفع</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                               <button onClick={() => setPaymentMethod('card')} className={cn("p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2", paymentMethod === 'card' ? "border-[#4F46E5] bg-[#4F46E5]/20 text-white shadow-lg shadow-[#4F46E5]/20" : "border-white/10 text-white/40 hover:border-white/20")}>
                                   <CreditCard size={24} />
-                                  <span className="text-xs font-black">بطاقة ائتمان</span>
+                                  <span className="text-[10px] font-black uppercase">بطاقة ائتمان</span>
                                </button>
-                               <button 
-                                 onClick={() => setPaymentMethod('wallet')}
-                                 className={cn(
-                                   "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                                   paymentMethod === 'wallet' ? "border-[#4F46E5] bg-[#4F46E5]/10 text-white" : "border-white/10 text-[#b6b7d5] hover:border-white/20"
-                                 )}
-                               >
+                               <button onClick={() => setPaymentMethod('wallet')} className={cn("p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2", paymentMethod === 'wallet' ? "border-[#4F46E5] bg-[#4F46E5]/20 text-white shadow-lg shadow-[#4F46E5]/20" : "border-white/10 text-white/40 hover:border-white/20")}>
                                   <Wallet size={24} />
-                                  <span className="text-xs font-black">محفظة الموقع</span>
+                                  <span className="text-[10px] font-black uppercase">محفظة الموقع</span>
                                </button>
                             </div>
                          </div>
 
                          {paymentMethod === 'wallet' ? (
-                           <div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                           <div className="p-6 bg-white/5 border border-white/10 rounded-2xl space-y-3 shadow-inner">
                               <div className="flex justify-between items-center">
-                                 <span className="text-sm text-[#b6b7d5] font-bold">الرصيد المتاح:</span>
-                                 <span className="text-xl font-black text-white">EGP {walletBalance.toFixed(2)}</span>
+                                 <span className="text-sm text-white/60 font-bold">الرصيد المتاح:</span>
+                                 <span className="text-xl font-black text-white">EGP {walletBalance.toFixed(0)}</span>
                               </div>
                               {walletBalance < (calculateDiscountedTotal() + 120) && (
-                                <p className="text-red-400 text-[10px] font-bold italic">* الرصيد غير كافٍ لإتمام العملية</p>
+                                <p className="text-red-400 text-[10px] font-black italic">* الرصيد غير كافٍ لإتمام العملية</p>
                               )}
                            </div>
                          ) : (
                            <div className="space-y-3">
-                              <Label className="text-xs font-black uppercase text-[#b6b7d5] flex items-center gap-2"><CreditCard size={16} /> تفاصيل البطاقة</Label>
-                              <div className="p-5 bg-white rounded-2xl shadow-inner"><CardElement options={{ style: { base: { fontSize: '16px', color: '#151e63' } } }} /></div>
+                              <Label className="text-[10px] font-black uppercase text-white/60 flex items-center gap-2 tracking-widest"><CreditCard size={14} /> تفاصيل البطاقة</Label>
+                              <div className="p-5 bg-white rounded-2xl shadow-xl"><CardElement options={{ style: { base: { fontSize: '16px', color: '#151e63', fontWeight: '700' } } }} /></div>
                            </div>
                          )}
 
-                         <Button onClick={handleSubmit} disabled={isSubmitting || (paymentMethod === 'card' && !stripe) || (paymentMethod === 'wallet' && walletBalance < (calculateDiscountedTotal() + 120))} className="action-button w-full h-16 rounded-[1.8rem] text-lg">
-                            {isSubmitting ? "جاري المعالجة..." : "تأكيد الحجز والدفع"}
+                         <Button onClick={handleSubmit} disabled={isSubmitting || (paymentMethod === 'card' && !stripe) || (paymentMethod === 'wallet' && walletBalance < (calculateDiscountedTotal() + 120))} className="action-button w-full h-16 rounded-[2rem] text-lg font-black shadow-2xl shadow-[#4F46E5]/20">
+                            {isSubmitting ? "جاري المعالجة..." : "تأكيد الحجز والدفع الآن"}
                          </Button>
-                         <div className="flex items-center justify-center gap-4 text-[10px] font-black text-[#b6b7d5]">
-                            <span className="flex items-center gap-1"><ShieldCheck size={14} className="text-[#4F46E5]" /> دفع آمن 100%</span>
-                            <span className="flex items-center gap-1"><Sparkles size={14} className="text-[#4F46E5]" /> حجز فوري</span>
-                         </div>
                       </div>
                    </div>
                 </div>

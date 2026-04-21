@@ -37,10 +37,10 @@ export const ArticlesPage = () => {
 
   return (
     <div className="flex flex-col bg-background" dir="rtl">
-      <div className="container mx-auto px-4 py-16">
+      <div className="container-custom py-16">
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-black text-[#151e63] mb-4">المدونة</h1>
-          <p className="text-lg text-muted-foreground font-bold max-w-2xl mx-auto">
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-black text-[#151e63] mb-4 tracking-tighter">المدونة السياحية</h1>
+          <p className="text-base md:text-lg lg:text-xl text-muted-foreground font-bold max-w-2xl mx-auto">
             اكتشف أحدث المقالات والنصائح حول السفر وأفضل الوجهات السياحية
           </p>
         </div>

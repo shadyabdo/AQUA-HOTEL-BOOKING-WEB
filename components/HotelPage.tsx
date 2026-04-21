@@ -333,7 +333,7 @@ export default function HotelPage() {
       
       {/* 1. Header Section */}
       <section className="w-full bg-white pt-10 pb-8 border-b border-gray-100">
-        <div className="container mx-auto px-4">
+        <div className="container-custom">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div className="space-y-4">
               <nav className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
@@ -364,11 +364,16 @@ export default function HotelPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button onClick={handleToggleFavorite} className={cn("w-14 h-14 rounded-2xl flex items-center justify-center border transition-all", favorites.includes(hotel.id) ? "bg-red-500 text-white border-red-500" : "bg-white text-gray-400 border-gray-200 hover:border-red-500 hover:text-red-500")}><Heart size={24} className={cn(favorites.includes(hotel.id) && "fill-current")} /></button>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-3 w-full md:w-auto">
+              <button onClick={handleToggleFavorite} className={cn("w-full sm:w-14 h-14 rounded-2xl flex items-center justify-center border transition-all", favorites.includes(hotel.id) ? "bg-red-500 text-white border-red-500" : "bg-white text-gray-400 border-gray-200 hover:border-red-500 hover:text-red-500")}>
+                <div className="flex items-center gap-2 sm:block">
+                  <Heart size={24} className={cn(favorites.includes(hotel.id) && "fill-current")} />
+                  <span className="sm:hidden font-black text-sm">المفضلة</span>
+                </div>
+              </button>
               <Button 
                 onClick={() => document.getElementById('rooms-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="action-button h-14 px-12 rounded-2xl text-lg font-black"
+                className="action-button h-14 px-8 md:px-12 rounded-2xl text-lg font-black w-full sm:w-auto"
               >
                 احجز الآن
               </Button>
@@ -378,9 +383,9 @@ export default function HotelPage() {
       </section>
 
       {/* 2. Slider Section */}
-      <section className="w-full mt-8 mb-8 overflow-hidden">
-        <div className="container mx-auto px-4">
-           <div className="relative h-[500px] rounded-[3rem] overflow-hidden group shadow-2xl bg-gray-100 border border-gray-100">
+      <section className="w-full mt-4 md:mt-8 mb-8 overflow-hidden">
+        <div className="container-custom">
+           <div className="relative h-[300px] sm:h-[400px] md:h-[500px] rounded-[2rem] md:rounded-[3rem] overflow-hidden group shadow-2xl bg-gray-100 border border-gray-100">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={currentSlide}
@@ -389,7 +394,7 @@ export default function HotelPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.8 }}
-                  className="w-full h-full object-cover cursor-pointer"
+                  className="w-full h-full object-cover cursor-pointer hover:scale-[1.02] transition-transform duration-1000"
                   onClick={() => { setLightboxIndex(currentSlide); setIsLightboxOpen(true); }}
                 />
               </AnimatePresence>
@@ -401,7 +406,7 @@ export default function HotelPage() {
                 {currentSlide + 1} / {hotel.images.length}
               </div>
 
-              <button onClick={() => setIsLightboxOpen(true)} className="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md px-6 py-3 rounded-2xl text-sm font-black text-gray-900 flex items-center gap-2 shadow-xl hover:bg-[#4F46E5] hover:text-white transition-all"><ExternalLink size={16} /> تصفح كل الصور</button>
+              <button onClick={() => setIsLightboxOpen(true)} className="absolute bottom-4 right-4 md:bottom-6 md:right-6 bg-white/95 backdrop-blur-md px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl text-[10px] md:text-sm font-black text-gray-900 flex items-center gap-2 shadow-xl hover:bg-[#4F46E5] hover:text-white transition-all"><ExternalLink size={14} className="md:size-4" /> تصفح كل الصور</button>
 
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
                  {hotel.images.map((_, idx) => (
@@ -414,14 +419,14 @@ export default function HotelPage() {
 
       {/* 3. Description Section */}
       <section className="w-full py-8">
-        <div className="container mx-auto px-4">
-          <div className="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-sm">
-             <div className="space-y-6">
+        <div className="container-custom">
+          <div className="bg-white border border-gray-100 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-sm">
+             <div className="space-y-4 md:space-y-6">
                 <div className="flex items-center gap-3 text-[#4F46E5]">
-                   <Info size={28} />
-                   <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">وصف الفندق والخدمات</h2>
+                   <Info size={24} className="md:size-7" />
+                   <h2 className="text-lg md:text-2xl font-black text-gray-900 tracking-tighter">وصف الفندق والخدمات</h2>
                 </div>
-                <p className="text-base md:text-xl lg:text-[25px] text-gray-600 leading-[1.7] font-medium text-right">{hotel.description}</p>
+                <p className="text-sm md:text-xl lg:text-[25px] text-gray-600 leading-[1.6] md:leading-[1.7] font-medium text-right">{hotel.description}</p>
              </div>
           </div>
         </div>
@@ -429,7 +434,7 @@ export default function HotelPage() {
 
       {/* 4. Amenities & Ratings Section - DYNAMIC AMENITIES */}
       <section className="w-full py-8">
-        <div className="container mx-auto px-4">
+        <div className="container-custom">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Dynamic Amenities Grid */}
@@ -438,13 +443,13 @@ export default function HotelPage() {
                   <div className="w-12 h-12 bg-[#f0eef5] rounded-xl flex items-center justify-center text-[#4F46E5]"><Waves size={26} /></div>
                   <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">المرافق والمميزات</h2>
                </div>
-               <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
                   {hotel.amenities.map((amenity, i) => (
-                    <div key={i} className="flex flex-col items-center gap-4 p-10 bg-white rounded-[2rem] border border-gray-100 text-center shadow-sm hover:border-[#e3dff0] transition-colors group">
-                       <div className="text-[#4F46E5] group-hover:scale-110 transition-transform">
+                    <div key={i} className="flex flex-col items-center gap-2 md:gap-4 p-6 md:p-10 bg-white rounded-[1.5rem] md:rounded-[2rem] border border-gray-100 text-center shadow-sm hover:border-[#e3dff0] transition-colors group">
+                       <div className="text-[#4F46E5] group-hover:scale-110 transition-transform scale-75 md:scale-100">
                           {getAmenityIcon(amenity)}
                        </div>
-                       <span className="font-black text-xs text-gray-900">{amenity}</span>
+                       <span className="font-black text-[10px] md:text-xs text-gray-900 line-clamp-1">{amenity}</span>
                     </div>
                   ))}
                   {hotel.amenities.length === 0 && (
@@ -459,13 +464,13 @@ export default function HotelPage() {
                   <div className="w-12 h-12 bg-[#f0eef5] rounded-xl flex items-center justify-center text-[#4F46E5]"><Star size={26} /></div>
                   <h2 className="text-xl md:text-2xl font-black text-gray-900 tracking-tighter">تقييمات الضيوف</h2>
                </div>
-               <div className="bg-[#1e2235] text-white p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-                  <div className="flex justify-between items-center mb-8 relative z-10">
+                <div className="bg-[#1e2235] text-white p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                  <div className="flex justify-between items-center mb-6 md:mb-8 relative z-10">
                      <div className="text-right">
-                        <p className="text-3xl font-black">استثنائي</p>
+                        <p className="text-2xl md:text-3xl font-black">استثنائي</p>
                         <p className="text-[10px] text-gray-400 font-bold opacity-80 uppercase tracking-widest mt-1">{(hotel.reviewsCount || hotel.reviews || 0)} تقييم</p>
                      </div>
-                     <div className="w-20 h-20 bg-[#4F46E5] rounded-[1.5rem] flex items-center justify-center text-4xl font-black border border-white/10 shadow-lg">
+                     <div className="w-16 h-16 md:w-20 md:h-20 bg-[#4F46E5] rounded-2xl md:rounded-[1.5rem] flex items-center justify-center text-2xl md:text-4xl font-black border border-white/10 shadow-lg">
                         {hotel.rating.toFixed(1)}
                      </div>
                   </div>
@@ -495,7 +500,7 @@ export default function HotelPage() {
 
       {/* 5. Rooms Section */}
       <section id="rooms-section" className="w-full py-8">
-        <div className="container mx-auto px-4">
+        <div className="container-custom">
            <div className="flex items-center gap-4 mb-8">
               <div className="w-12 h-12 bg-[#f0eef5] rounded-xl flex items-center justify-center text-[#4F46E5]"><BedDouble size={26} /></div>
               <h2 className="text-xl md:text-3xl font-black text-gray-900 tracking-tighter">خيارات الإقامة المتاحة</h2>

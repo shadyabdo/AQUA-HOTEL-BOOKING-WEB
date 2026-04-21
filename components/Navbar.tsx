@@ -21,7 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { auth, db } from "@/src/lib/firebase";
 import { doc, onSnapshot } from "firebase/firestore";
-import { signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect, GoogleAuthProvider, signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import { 
   DropdownMenu, 
@@ -32,11 +32,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuGroup
 } from "@/components/ui/dropdown-menu";
+import AuthModal from "./AuthModal";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -66,10 +68,20 @@ export default function Navbar() {
 
   const login = async () => {
     const provider = new GoogleAuthProvider();
+    // تحسين تسجيل الدخول للهواتف: استخدام Redirect بدلاً من Popup
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
+      if (isMobile) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
+    } catch (error: any) {
       console.error("Login failed:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        alert("هذا النطاق غير مصرح به في Firebase. يرجى إضافة الـ IP أو الدومين الحالي في إعدادات Firebase Console.");
+      }
     }
   };
 
@@ -79,17 +91,18 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[#d6d6e7]/50">
-      <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-[#d6d6e7]/50">
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      <div className="container-custom h-20 md:h-24 flex items-center justify-between gap-4">
         {/* Brand */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="bg-[#4F46E5] p-2 rounded-2xl shadow-lg shadow-[#4F46E5]/30 group-hover:scale-105 transition-transform">
-            <img src="/logo.png" alt="AQUA BOOKING" className="h-10 w-auto object-contain" />
+        <Link to="/" className="flex items-center gap-3 group shrink-0">
+          <div className="bg-[#4F46E5] p-2 md:p-2.5 rounded-2xl shadow-xl shadow-[#4F46E5]/30 group-hover:scale-105 transition-all duration-500">
+            <img src="/logo.png" alt="AQUA BOOKING" className="h-8 md:h-12 w-auto object-contain" />
           </div>
         </Link>
 
         {/* Navigation */}
-        <nav className="hidden lg:flex items-center gap-2">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {[
             { name: "الرئيسية", path: "/", icon: <Home size={18} /> },
             { name: "اكتشف", path: "/rooms", icon: <Compass size={18} /> },
@@ -101,14 +114,14 @@ export default function Navbar() {
               key={link.path} 
               to={link.path} 
               className={cn(
-                "text-[15px] font-black transition-all relative px-5 py-2.5 rounded-xl flex items-center gap-2.5 group overflow-hidden",
+                "text-[14px] xl:text-[15px] font-black transition-all relative px-4 xl:px-5 py-2.5 rounded-xl flex items-center gap-2.5 group overflow-hidden",
                 location.pathname === link.path 
                   ? "text-[#4F46E5] bg-indigo-50/50" 
-                  : "text-[#777aaf] hover:text-[#4F46E5] hover:bg-gray-50 hover:scale-105"
+                  : "text-[#777aaf] hover:text-[#4F46E5] hover:bg-gray-50/80 hover:scale-105"
               )}
             >
               <span className={cn(
-                "transition-transform duration-300 group-hover:rotate-12",
+                "transition-transform duration-500 group-hover:rotate-12",
                 location.pathname === link.path && "scale-110"
               )}>
                 {link.icon}
@@ -126,17 +139,17 @@ export default function Navbar() {
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           {user ? (
             <DropdownMenu>
-              {/* Fixed: Removed asChild which was causing TS error */}
               <DropdownMenuTrigger>
-                <div className="flex items-center gap-3 p-1 pr-3 bg-[#f5f5fa] rounded-full hover:bg-[#d6d6e7]/30 transition-all border border-[#d6d6e7]/50 cursor-pointer">
-                  <span className="text-xs font-bold text-[#151e63] hidden sm:block">{user.displayName?.split(' ')[0]}</span>
-                  <div className="w-8 h-8 rounded-full overflow-hidden shadow-sm">
+                <div className="flex items-center gap-2 md:gap-3 p-1 pr-2 md:pr-3 bg-[#f5f5fa] rounded-full hover:bg-[#d6d6e7]/30 transition-all border border-[#d6d6e7]/50 cursor-pointer">
+                  <span className="text-[10px] md:text-xs font-black text-[#151e63] hidden sm:block">{user.displayName?.split(' ')[0]}</span>
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden shadow-sm border-2 border-white">
                     <img 
                       src={userData?.photoURL || user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} 
                       alt="User" 
+                      className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
@@ -165,16 +178,17 @@ export default function Navbar() {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" className="text-[#4F46E5] font-bold hover:bg-[#EEF2FF] rounded-xl px-6" onClick={login}>
+              <Button variant="ghost" className="hidden sm:flex text-[#4F46E5] font-bold hover:bg-[#EEF2FF] rounded-xl px-4 md:px-6" onClick={() => setShowAuthModal(true)}>
                 دخول
               </Button>
-              <Button className="bg-[#4F46E5] text-white hover:bg-[#3730A3] font-bold rounded-xl px-6 shadow-lg shadow-indigo-100" onClick={login}>
-                اشتراك
+              <Button className="bg-[#4F46E5] text-white hover:bg-[#3730A3] font-bold rounded-xl px-4 sm:px-6 shadow-lg shadow-indigo-100" onClick={() => setShowAuthModal(true)}>
+                <span className="hidden sm:inline">اشتراك</span>
+                <span className="sm:hidden text-xs">دخول</span>
               </Button>
             </div>
           )}
           
-          <Button variant="ghost" className="lg:hidden p-2 rounded-xl text-[#151e63]" onClick={() => setIsOpen(!isOpen)}>
+          <Button variant="ghost" className="lg:hidden p-2 rounded-xl text-[#151e63] hover:bg-gray-100" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </Button>
         </div>
@@ -211,7 +225,7 @@ export default function Navbar() {
                 </Link>
               ))}
               {!user && (
-                <Button onClick={login} className="w-full h-12 bg-[#4F46E5] text-white font-bold rounded-xl">تسجيل الدخول</Button>
+                <Button onClick={() => { setIsOpen(false); setShowAuthModal(true); }} className="w-full h-12 bg-[#4F46E5] text-white font-bold rounded-xl">تسجيل الدخول</Button>
               )}
             </div>
           </motion.div>
