@@ -1,0 +1,61 @@
+export default function Footer() {
+  return (
+    <footer className="bg-[#050814] text-white pt-32 pb-12 border-t border-white/5 relative overflow-hidden" dir="rtl">
+      {/* Background Decor */}
+      <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-[#4F46E5]/5 to-transparent pointer-events-none" />
+
+      <div className="container mx-auto px-4 relative z-10 text-right">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-16 mb-24">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="Aqua Logo" className="h-20 w-auto object-contain" />
+            </div>
+            <p className="text-muted-foreground text-lg leading-relaxed max-w-sm">
+              وجهتك المثالية لحجز أرقى الفنادق والمنتجعات في مصر. نحن نضمن لك أفضل الأسعار وتجربة حجز سلسة وآمنة.
+            </p>
+
+          </div>
+
+          <div>
+            <h4 className="text-[#4F46E5] font-black uppercase tracking-widest text-xs mb-8">روابط سريعة</h4>
+            <ul className="space-y-4 text-sm font-bold text-muted-foreground">
+              <li><a href="/" className="hover:text-white transition-colors">الرئيسية</a></li>
+              <li><a href="/offers" className="hover:text-white transition-colors">الكوبونات</a></li>
+              <li><a href="/articles" className="hover:text-white transition-colors">المدونة السياحية</a></li>
+              <li><a href="/contact" className="hover:text-white transition-colors">تواصل معنا</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-[#4F46E5] font-black uppercase tracking-widest text-xs mb-8">الدعم والمساندة</h4>
+            <ul className="space-y-4 text-sm font-bold text-muted-foreground">
+              <li><a href="/faq" className="hover:text-white transition-colors">مركز المساعدة</a></li>
+              <li><a href="/cancellation" className="hover:text-white transition-colors">سياسة الإلغاء</a></li>
+              <li><a href="/privacy" className="hover:text-white transition-colors">الأمان والخصوصية</a></li>
+              <li><a href="/faq" className="hover:text-white transition-colors">الأسئلة الشائعة</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-[#4F46E5] font-black uppercase tracking-widest text-xs mb-8">اكتشف المزيد</h4>
+            <ul className="space-y-4 text-sm font-bold text-muted-foreground">
+              <li><a href="/rooms" className="hover:text-white transition-colors">تصفح الفنادق</a></li>
+              <li><a href="/rooms" className="hover:text-white transition-colors">أفضل العروض</a></li>
+              <li><a href="/articles" className="hover:text-white transition-colors">نصائح السفر</a></li>
+              <li><a href="/" className="hover:text-white transition-colors">شركاء النجاح</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+          <p>© 2026 AQUABOOK™. جميع الحقوق محفوظة.</p>
+          <div className="flex gap-8">
+            <a href="/privacy" className="hover:text-white">الخصوصية</a>
+            <a href="/cancellation" className="hover:text-white">الشروط</a>
+            <a href="/privacy" className="hover:text-white">الكوكيز</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
