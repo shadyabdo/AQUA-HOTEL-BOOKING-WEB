@@ -49,7 +49,6 @@ export const showAlert = (title: string, text: string, icon: 'success' | 'error'
     confirmButtonText: 'حسناً',
     showCloseButton: true,
     padding: '2rem',
-    borderRadius: '2rem',
     customClass: {
       popup: 'rounded-[2rem] border-[#d6d6e7]/50 shadow-2xl max-h-[90vh] overflow-y-auto',
       title: 'font-black text-[#151e63]',
