@@ -1,0 +1,15 @@
+{
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true
+    },
+    "files.exclude": {
+        "**/node_modules": true,
+        "**/dist": true
+    },
+    "eslint.workingDirectories": [
+        "./"
+    ],
+    "css.lint.unknownProperties": "ignore",
+    "css.lint.duplicateProperties": "ignore"
+}

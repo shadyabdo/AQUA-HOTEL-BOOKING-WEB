@@ -1,0 +1,105 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Almarai:wght@300;400;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", "Almarai", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Custom Palette Integration */
+  --color-background: #ffffff;
+  --color-foreground: #151e63; /* Grey 1000 */
+
+  --color-primary: #4F46E5; /* Indigo 700 */
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #5a5e9a; /* Grey 700 */
+  --color-secondary-foreground: #ffffff;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #151e63;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #151e63;
+
+  --color-muted: #f5f5fa; /* Grey 200 */
+  --color-muted-foreground: #777aaf; /* Grey 600 */
+
+  --color-accent: #818CF8; /* Indigo 500 */
+  --color-accent-foreground: #ffffff;
+
+  --color-border: #d6d6e7; /* Grey 300 */
+  --color-input: #d6d6e7;
+  --color-ring: #6366F1; /* Indigo 600 */
+  
+  /* Breakpoints extension */
+  --breakpoint-xs: 480px;
+  --breakpoint-2xl: 1536px;
+  --breakpoint-3xl: 1920px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-[#fcfcfd] text-foreground font-sans antialiased;
+    direction: rtl;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+  
+  /* Fluid Typography Basis */
+  html {
+    font-size: 15px;
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  @media (min-width: 768px) {
+    html { font-size: 16px; }
+  }
+  
+  @media (min-width: 1920px) {
+    html { font-size: 18px; }
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 3xl:max-w-[1800px];
+  }
+
+  .modern-card {
+    @apply bg-white border border-border shadow-[0_4px_20px_rgba(214,214,231,0.2)] hover:shadow-[0_12px_40px_rgba(214,214,231,0.5)] transition-all duration-500 rounded-2xl md:rounded-[2rem] overflow-hidden;
+  }
+  
+  .glass-nav {
+    @apply bg-white/80 backdrop-blur-xl border-b border-[#d6d6e7]/50;
+  }
+
+  .action-button {
+    @apply bg-primary text-white font-black py-4 md:py-5 px-8 rounded-xl md:rounded-2xl hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-xl shadow-primary/20;
+  }
+
+  .badge-indigo {
+    @apply bg-[#e8e5f0] text-[#4F46E5] text-[10px] md:text-xs font-black uppercase tracking-widest px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-indigo-50;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-[#b6b7d5] rounded-full hover:bg-[#4F46E5] border-2 border-[#f5f5fa];
+}
+
+/* Animation Utilities */
+.hover-lift {
+  @apply transition-transform duration-300 hover:-translate-y-2;
+}

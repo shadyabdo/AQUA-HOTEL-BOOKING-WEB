@@ -1,0 +1,125 @@
+{
+  "entities": {
+    "Hotel": {
+      "title": "Hotel",
+      "description": "A luxury hotel property",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "location": { "type": "string" },
+        "city": { "type": "string" },
+        "rating": { "type": "number" },
+        "amenities": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "description", "images", "location", "city"]
+    },
+    "Room": {
+      "title": "Hotel Room",
+      "description": "A luxury hotel room",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "price": { "type": "number" },
+        "size": { "type": "string" },
+        "guests": { "type": "number" },
+        "bed": { "type": "string" },
+        "view": { "type": "string" },
+        "amenities": { "type": "array", "items": { "type": "string" } },
+        "level": { "type": "string", "enum": ["standard", "deluxe", "suite", "royal"] },
+        "details": { "type": "string", "description": "Rich text details about the room" }
+      },
+      "required": ["title", "description", "images", "price"]
+    },
+    "Booking": {
+      "title": "Room Booking",
+      "description": "A reservation for a hotel room",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "hotelId": { "type": "string" },
+        "roomId": { "type": "string" },
+        "roomTitle": { "type": "string" },
+        "checkIn": { "type": "string", "format": "date-time" },
+        "checkOut": { "type": "string", "format": "date-time" },
+        "guests": { "type": "number" },
+        "roomAmenities": { "type": "array", "items": { "type": "string" } },
+        "price": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "hotelId", "roomId", "checkIn", "checkOut", "price"]
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User account information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "user"] }
+      },
+      "required": ["uid", "email"]
+    },
+    "City": {
+      "title": "Egyptian City",
+      "description": "A city in Egypt with tourism value",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" },
+        "isFeatured": { "type": "boolean" }
+      },
+      "required": ["name", "image"]
+    },
+    "Review": {
+      "title": "Hotel Review",
+      "description": "A user review for a hotel",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "hotelId": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "hotelId", "rating"]
+    }
+  },
+  "firestore": {
+    "/hotels": {
+      "schema": "Hotel",
+      "description": "Hotel properties"
+    },
+    "/hotels/{hotelId}/rooms": {
+      "schema": "Room",
+      "description": "Rooms within a specific hotel"
+    },
+    "/hotels/{hotelId}/reviews": {
+      "schema": "Review",
+      "description": "User reviews for a specific hotel"
+    },
+    "/cities": {
+      "schema": "City",
+      "description": "Egyptian cities for the Discover section"
+    },
+    "/bookings": {
+      "schema": "Booking",
+      "description": "User reservations"
+    },
+    "/users": {
+      "schema": "User",
+      "description": "User profiles"
+    }
+  }
+}
