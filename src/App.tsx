@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Toaster, toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
@@ -267,52 +267,87 @@ function HomePage({ openBookingModal, user }: { openBookingModal: (id?: string, 
   );
 }
 
-export default function App() {
+function AppContent() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | undefined>(undefined);
   const [selectedHotelId, setSelectedHotelId] = useState<string | undefined>(undefined);
   const [user, setUser] = useState<any>(null);
+  const location = useLocation();
 
-  React.useEffect(() => { const unsubscribe = onAuthStateChanged(auth, (currentUser) => { setUser(currentUser); }); return () => unsubscribe(); }, []);
-  const openBookingModal = (roomId?: string, hotelId?: string) => { setSelectedRoomId(roomId); setSelectedHotelId(hotelId); setIsBookingModalOpen(true); };
+  React.useEffect(() => { 
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => { 
+      setUser(currentUser); 
+    }); 
+    return () => unsubscribe(); 
+  }, []);
+
+  const openBookingModal = (roomId?: string, hotelId?: string) => { 
+    setSelectedRoomId(roomId); 
+    setSelectedHotelId(hotelId); 
+    setIsBookingModalOpen(true); 
+  };
+
+  const isAuthPage = location.pathname === '/login';
 
   return (
+    <div className="min-h-screen bg-white selection:bg-[#4F46E5] selection:text-white overflow-x-hidden relative">
+      {!isAuthPage && <Navbar />}
+      <main className={cn(
+        !isAuthPage && "pt-20 md:pt-24"
+      )}>
+        <Routes>
+          <Route path="/" element={<HomePage openBookingModal={openBookingModal} user={user} />} />
+          <Route path="/rooms" element={<RoomsPage />} />
+          <Route path="/hotel/:cityId/:id" element={<HotelPage />} />
+          <Route path="/hotel/:cityId/:id/room/:roomId" element={<RoomDetailsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+
+          <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/" />} />
+          <Route path="/bookings" element={<Navigate to="/profile" />} />
+          <Route path="/favorites" element={<Navigate to="/profile" />} />
+
+          <Route path="/offers" element={<OffersPage />} />
+          <Route path="/articles" element={<ArticlesPage />} />
+          <Route path="/article/:id" element={<ArticleDetailsPage />} />
+          <Route path="/faq" element={<FAQPage />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/city/:cityName" element={<CityHotelsPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/cancellation" element={<CancellationPolicyPage />} />
+        </Routes>
+      </main>
+      {!isAuthPage && <Footer />}
+      <AnimatePresence>
+        {isBookingModalOpen && (
+          <BookingModal 
+            isOpen={isBookingModalOpen} 
+            onClose={() => setIsBookingModalOpen(false)} 
+            initialRoomId={selectedRoomId} 
+            initialHotelId={selectedHotelId} 
+          />
+        )}
+      </AnimatePresence>
+      <ScrollToTop />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
     <ErrorBoundary>
-      <Toaster position="top-center" richColors dir="rtl" toastOptions={{ style: { fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold', padding: '16px 20px', borderRadius: '12px' }, className: 'flex-row-reverse text-right' }} />
+      <Toaster 
+        position="top-center" 
+        richColors 
+        dir="rtl" 
+        toastOptions={{ 
+          style: { fontFamily: 'inherit', fontSize: '14px', fontWeight: 'bold', padding: '16px 20px', borderRadius: '12px' }, 
+          className: 'flex-row-reverse text-right' 
+        }} 
+      />
       <Elements stripe={stripePromise}>
         <Router>
-          <div className="min-h-screen bg-white selection:bg-[#4F46E5] selection:text-white overflow-x-hidden relative">
-            <Navbar />
-            <main className="pt-20 md:pt-24">
-              <Routes>
-                <Route path="/" element={<HomePage openBookingModal={openBookingModal} user={user} />} />
-                <Route path="/rooms" element={<RoomsPage />} />
-                <Route path="/hotel/:cityId/:id" element={<HotelPage />} />
-                <Route path="/hotel/:cityId/:id/room/:roomId" element={<RoomDetailsPage />} />
-                <Route path="/login" element={<LoginPage />} />
-
-                {/* Unified Management Page - Handling Profile, Bookings and Favorites */}
-                <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/" />} />
-
-                {/* Backward compatibility / Redirection */}
-                <Route path="/bookings" element={<Navigate to="/profile" />} />
-                <Route path="/favorites" element={<Navigate to="/profile" />} />
-
-                <Route path="/offers" element={<OffersPage />} />
-                <Route path="/articles" element={<ArticlesPage />} />
-                <Route path="/article/:id" element={<ArticleDetailsPage />} />
-                <Route path="/faq" element={<FAQPage />} />
-                <Route path="/sitemap" element={<SitemapPage />} />
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/city/:cityName" element={<CityHotelsPage />} />
-                <Route path="/privacy" element={<PrivacyPolicyPage />} />
-                <Route path="/cancellation" element={<CancellationPolicyPage />} />
-              </Routes>
-            </main>
-            <Footer />
-            <AnimatePresence>{isBookingModalOpen && <BookingModal isOpen={isBookingModalOpen} onClose={() => setIsBookingModalOpen(false)} initialRoomId={selectedRoomId} initialHotelId={selectedHotelId} />}</AnimatePresence>
-            <ScrollToTop />
-          </div>
+          <AppContent />
         </Router>
       </Elements>
     </ErrorBoundary>
