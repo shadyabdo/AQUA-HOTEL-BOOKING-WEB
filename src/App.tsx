@@ -28,8 +28,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { auth, db, handleFirestoreError, OperationType, getCitiesListener, getAllHotels, getFeaturedCitiesListener, fetchTopDeals, toggleFavorite, getFavoritesListener } from "@/src/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { Elements } from "@stripe/react-stripe-js";
-import { stripePromise } from "@/src/lib/stripe";
 import { Star, MapPin, ChevronRight, ChevronLeft, ArrowRight, ShieldCheck, Mail, AlertCircle, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { showSuccess, showError, showInfo } from "@/src/lib/swal";
@@ -347,11 +345,9 @@ export default function App() {
           className: 'flex-row-reverse text-right' 
         }} 
       />
-      <Elements stripe={stripePromise}>
-        <Router>
-          <AppContent />
-        </Router>
-      </Elements>
+      <Router>
+        <AppContent />
+      </Router>
     </ErrorBoundary>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Calendar as CalendarIcon, Users, Bed, Check, ArrowRight, ArrowLeft, Info, CreditCard, AlertCircle } from "lucide-react";
+import { X, Calendar as CalendarIcon, Users, Bed, Check, ArrowRight, ArrowLeft, Info, CreditCard, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
@@ -13,8 +13,6 @@ import { db, auth, sendVerificationEmail, createBooking, getAllRooms, addTransac
 import { collection, addDoc, getDocs, query, doc, getDoc, updateDoc, increment } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -24,8 +22,6 @@ interface BookingModalProps {
 }
 
 export default function BookingModal({ isOpen, onClose, initialRoomId, initialHotelId }: BookingModalProps) {
-  const stripe = useStripe();
-  const elements = useElements();
   const navigate = useNavigate();
 
   const [rooms, setRooms] = useState<any[]>([]);
@@ -118,10 +114,15 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
     setPaymentError(null);
     try {
       const totalAmount = calculateTotal();
+      
+      // Simulated processing delay for "Interactive Scenario"
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       if (paymentMethod === "wallet") {
         if (walletBalance < totalAmount) throw new Error("رصيد المحفظة غير كافٍ.");
         const userRef = doc(db, 'users', auth.currentUser.uid);
         await updateDoc(userRef, { walletBalance: increment(-totalAmount), totalSpent: increment(totalAmount) });
+        
         const room = rooms.find(r => r.id === selectedRoom);
         await createBooking({
           userId: auth.currentUser?.uid,
@@ -144,25 +145,8 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
           description: `حجز غرفة: ${room?.title || 'غير معروف'}`,
           method: 'محفظة AQUA'
         });
-        setIsSuccess(true);
-        toast.success("تم الحجز بنجاح!");
-        return;
-      }
-
-      if (!stripe || !elements) return;
-      const response = await fetch("/api/create-payment-intent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: totalAmount }),
-      });
-      const { clientSecret, error: backendError } = await response.json();
-      if (backendError) throw new Error(backendError);
-      const cardElement = elements.getElement(CardElement);
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: { card: cardElement!, billing_details: { name: guestDetails.name, email: guestDetails.email } },
-      });
-      if (stripeError) throw new Error(stripeError.message);
-      if (paymentIntent?.status === "succeeded") {
+      } else {
+        // Simulated Card Payment
         const room = rooms.find(r => r.id === selectedRoom);
         await createBooking({
           userId: auth.currentUser?.uid,
@@ -177,8 +161,7 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
           guests: parseInt(guestDetails.guests),
           requests: guestDetails.requests,
           price: totalAmount,
-          paymentMethod: "بطاقة ائتمان (Stripe)",
-          paymentIntentId: paymentIntent.id
+          paymentMethod: "بطاقة دفع افتراضية (تجريبي)"
         });
         const userRef = doc(db, 'users', auth.currentUser.uid);
         await updateDoc(userRef, { totalSpent: increment(totalAmount) });
@@ -186,11 +169,12 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
           type: 'booking',
           amount: totalAmount,
           description: `حجز غرفة: ${room?.title || 'غير معروف'}`,
-          method: 'بطاقة ائتمان (Stripe)'
+          method: 'بطاقة دفع افتراضية'
         });
-        setIsSuccess(true);
-        toast.success("تم الحجز بنجاح!");
       }
+
+      setIsSuccess(true);
+      toast.success("تم الحجز بنجاح!");
     } catch (error: any) {
       setPaymentError(error.message);
       toast.error(error.message);
@@ -297,10 +281,18 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
                     <button onClick={() => setPaymentMethod("wallet")} className={cn("flex-1 py-3 rounded-xl font-black text-sm transition-all", paymentMethod === "wallet" ? "bg-white shadow-xl text-[#4F46E5]" : "text-[#777aaf]")}>محفظة AQUA</button>
                   </div>
                   {paymentMethod === "card" ? (
-                    <div className="p-6 border-2 border-[#d6d6e7]/50 rounded-2xl bg-white"><CardElement options={{ style: { base: { fontSize: '16px', color: '#151e63' } } }} /></div>
+                    <div className="p-8 bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-[2rem] text-center space-y-4">
+                      <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                        <Sparkles className="text-primary" size={32} />
+                      </div>
+                      <div>
+                        <p className="font-black text-[#151e63]">نظام دفع تجريبي</p>
+                        <p className="text-xs text-[#777aaf] font-bold mt-1">سيتم تأكيد الحجز فوراً دون طلب بيانات بطاقة حقيقية.</p>
+                      </div>
+                    </div>
                   ) : (
                     <div className="p-8 bg-[#e8e5f0] rounded-3xl text-center border-2 border-dashed border-[#4F46E5]/20">
-                      <p className="font-black text-[#151e63]">رصيدك: EGP {walletBalance.toLocaleString()}</p>
+                      <p className="font-black text-[#151e63]">رصيدك الحالي: EGP {walletBalance.toLocaleString()}</p>
                       {walletBalance < calculateTotal() && <p className="text-red-500 text-xs mt-3 font-black">الرصيد غير كافٍ.</p>}
                     </div>
                   )}
@@ -318,7 +310,12 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
               disabled={isSubmitting || (step === 4 && paymentMethod === "wallet" && walletBalance < calculateTotal())}
               className="action-button min-w-[140px]"
             >
-              {isSubmitting ? "جاري المعالجة..." : step === 4 ? `تأكيد ودفع ${calculateTotal()} EGP` : "التالي"}
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>جاري...</span>
+                </div>
+              ) : step === 4 ? `تأكيد حجز ${calculateTotal()} EGP` : "التالي"}
             </Button>
           </div>
         )}

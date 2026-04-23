@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, CreditCard, Check, ShieldCheck, AlertCircle } from "lucide-react";
+import { X, CreditCard, Check, ShieldCheck, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { db, auth, addTransaction } from "@/src/lib/firebase";
-import { doc, increment, setDoc, collection, addDoc } from "firebase/firestore";
+import { doc, increment, setDoc } from "firebase/firestore";
 import { showSuccess, showError } from "@/src/lib/swal";
 
 interface WalletTopUpModalProps {
@@ -14,19 +13,17 @@ interface WalletTopUpModalProps {
 }
 
 export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalProps) {
-  const stripe = useStripe();
-  const elements = useElements();
-
   const [amount, setAmount] = useState<string>("500");
-  const [selectedWallet, setSelectedWallet] = useState<"bank_card" | "stripe">("stripe");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedWallet === "stripe" && (!stripe || !elements)) return;
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      showError("خطأ", "يجب تسجيل الدخول أولاً");
+      return;
+    }
 
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -37,73 +34,30 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
     setIsSubmitting(true);
     setError(null);
 
-    const walletLabel = selectedWallet === "stripe" ? "Stripe" : "البطاقة البنكية";
-    const transactionDescription = selectedWallet === "stripe"
-      ? "شحن رصيد المحفظة عبر Stripe"
-      : "شحن رصيد المحفظة عبر البطاقة البنكية";
-
     try {
-      let paymentIntentId = null;
+      // Simulated processing delay for "Interactive Scenario"
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      if (selectedWallet === "stripe" || selectedWallet === "bank_card") {
-        // 1. Create Payment Intent
-        const response = await fetch("/api/create-payment-intent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: numAmount, currency: "egp" }),
-        });
-
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error(`خطأ في الخادم (${response.status}): ${text || 'استجابة فارغة'}`);
-        }
-
-        const data = await response.json();
-        const { clientSecret, error: backendError } = data;
-
-        if (backendError) throw new Error(backendError);
-
-        // 2. Confirm Payment
-        const cardElement = elements!.getElement(CardElement);
-        if (!cardElement) throw new Error("Card element not found");
-
-        const { error: stripeError, paymentIntent } = await stripe!.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              name: auth.currentUser.displayName || "",
-              email: auth.currentUser.email || "",
-            },
-          },
-        });
-
-        if (stripeError) throw new Error(stripeError.message);
-
-        if (paymentIntent?.status !== "succeeded") throw new Error("Payment failed");
-
-        paymentIntentId = paymentIntent.id;
-      }
-
-      // 3. Update Wallet Balance in Firestore (create user doc if missing)
+      // 1. Update Wallet Balance in Firestore (create user doc if missing)
       const userRef = doc(db, "users", auth.currentUser.uid);
       await setDoc(userRef, {
         uid: auth.currentUser.uid,
         walletBalance: increment(numAmount)
       }, { merge: true });
 
-      // 4. Record Transaction
+      // 2. Record Transaction
       await addTransaction(auth.currentUser.uid, {
         type: 'topup',
         amount: numAmount,
-        description: transactionDescription,
-        method: walletLabel
+        description: "شحن رصيد المحفظة (تجريبي)",
+        method: "بطاقة دفع افتراضية"
       });
 
       setIsSuccess(true);
-      showSuccess("تم الشحن!", "تم شحن رصيد المحفظة بنجاح!");
+      showSuccess("تم الشحن!", `تم إضافة ${numAmount} ج.م إلى محفظتك بنجاح!`);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "حدث خطأ أثناء معالجة الدفع");
+      setError(err.message || "حدث خطأ أثناء معالجة العملية");
       showError("فشلت العملية", err.message || "فشلت عملية الشحن");
     } finally {
       setIsSubmitting(false);
@@ -125,8 +79,8 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
               <CreditCard size={20} />
             </div>
             <div>
-              <h3 className="font-bold">شحن المحفظة</h3>
-              <p className="text-xs opacity-80">اختر المحفظة الإلكترونية ثم أضف مبلغ الشحن</p>
+              <h3 className="font-bold">شحن المحفظة (تجريبي)</h3>
+              <p className="text-xs opacity-80">أضف رصيداً إلى محفظتك لتجربة الحجز</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -135,36 +89,6 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
         </div>
 
         <div className="p-5 md:p-6 overflow-y-auto custom-scrollbar">
-          <div className="mb-5">
-            <p className="text-sm font-bold text-gray-700 mb-2">اختر المحفظة الإلكترونية</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedWallet("bank_card")}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${
-                  selectedWallet === "bank_card"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-gray-100 bg-white text-gray-700 hover:border-primary/30"
-                }`}
-              >
-                <p className="font-black">البطاقة البنكية</p>
-                <p className="text-xs text-muted-foreground mt-1">بطاقة الائتمان / الخصم المباشر</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedWallet("stripe")}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${
-                  selectedWallet === "stripe"
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-gray-100 bg-white text-gray-700 hover:border-primary/30"
-                }`}
-              >
-                <p className="font-black">Stripe</p>
-                <p className="text-xs text-muted-foreground mt-1">الدفع الإلكتروني الآمن</p>
-              </button>
-            </div>
-          </div>
           <AnimatePresence mode="wait">
             {isSuccess ? (
               <motion.div
@@ -177,7 +101,7 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
                   <Check size={40} />
                 </div>
                 <h4 className="text-2xl font-black mb-2">تم الشحن بنجاح!</h4>
-                <p className="text-gray-500 mb-8 font-bold">رصيدك الجديد متاح الآن للاستخدام.</p>
+                <p className="text-gray-500 mb-8 font-bold">رصيدك الجديد متاح الآن للاستخدام في حجز الفنادق.</p>
                 <Button onClick={onClose} className="w-full bg-primary text-white h-12 rounded-xl font-bold">
                   إغلاق
                 </Button>
@@ -209,26 +133,14 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
                   />
                 </div>
 
-                {(selectedWallet === "stripe" || selectedWallet === "bank_card") && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold block mb-2 text-gray-700">بيانات البطاقة</label>
-                    <div className="p-4 border-2 border-gray-100 rounded-2xl bg-gray-50/50">
-                      <CardElement 
-                        options={{
-                          style: {
-                            base: {
-                              fontSize: '15px',
-                              color: '#1a1a1a',
-                              fontFamily: 'system-ui, sans-serif',
-                              '::placeholder': { color: '#a0a0a0' },
-                            },
-                          },
-                          hidePostalCode: true
-                        }}
-                      />
-                    </div>
+                <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-start gap-3">
+                  <Sparkles size={20} className="text-primary shrink-0 mt-1" />
+                  <div>
+                    <p className="text-xs font-bold text-indigo-900 leading-relaxed">
+                      هذا النظام مخصص للتجربة التفاعلية. سيتم إضافة الرصيد إلى حسابك فوراً دون الحاجة لبيانات دفع حقيقية.
+                    </p>
                   </div>
-                )}
+                </div>
 
                 {error && (
                   <div className="p-4 bg-red-50 text-red-600 rounded-2xl flex items-center gap-3 text-sm font-bold">
@@ -239,20 +151,22 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
 
                 <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold bg-gray-50 p-3 rounded-xl">
                   <ShieldCheck size={14} className="text-green-500" />
-                  <span>
-                    {selectedWallet === "stripe"
-                      ? "تتم معالجة جميع المدفوعات بأمان عبر Stripe بتقنية التشفير 256-bit."
-                      : "تتم معالجة بيانات بطاقتك البنكية بأعلى معايير الأمان المعتمدة."
-                    }
-                  </span>
+                  <span>تتم حماية بيانات حسابك وفق أعلى معايير الأمان المعتمدة في AQUA.</span>
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={isSubmitting || !stripe}
+                  disabled={isSubmitting}
                   className="w-full h-14 bg-primary text-white font-black text-lg rounded-2xl hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all"
                 >
-                  {isSubmitting ? "جاري المعالجة..." : `شحن EGP ${parseFloat(amount) || 0} عبر ${selectedWallet === "stripe" ? "Stripe" : "البطاقة البنكية"}`}
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>جاري المعالجة...</span>
+                    </div>
+                  ) : (
+                    `شحن EGP ${parseFloat(amount) || 0} الآن`
+                  )}
                 </Button>
               </form>
             )}

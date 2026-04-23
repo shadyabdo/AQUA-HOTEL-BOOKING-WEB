@@ -49,15 +49,11 @@ import { ar } from "date-fns/locale";
 import { showError, showSuccess, showInfo } from "@/src/lib/swal";
 import { db, auth, createBooking, getUserBalance, updateUserBalance, addTransaction } from "../src/lib/firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 export default function RoomDetailsPage() {
   const { cityId, id, roomId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const stripe = useStripe();
-  const elements = useElements();
 
   const [room, setRoom] = useState<any>(null);
   const [hotel, setHotel] = useState<any>(null);
@@ -208,12 +204,17 @@ export default function RoomDetailsPage() {
 
   const handleSubmit = async () => {
     if (!auth.currentUser) { 
-      try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (e) { return; } 
+      navigate("/login");
+      return;
     }
     setIsSubmitting(true);
     setPaymentError(null);
     try {
       const totalAmount = calculateDiscountedTotal() + 120;
+      
+      // Simulated processing delay for "Interactive Scenario"
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
       if (paymentMethod === 'wallet') {
         if (walletBalance < totalAmount) throw new Error("رصيد المحفظة غير كافٍ.");
         await updateUserBalance(auth.currentUser.uid, -totalAmount);
@@ -229,25 +230,18 @@ export default function RoomDetailsPage() {
         setIsSuccess(true);
         showSuccess("تم الحجز!", "تم الحجز بنجاح باستخدام المحفظة!");
       } else {
-        if (!stripe || !elements) return;
-        const response = await fetch("/api/create-payment-intent", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ amount: totalAmount }) });
-        const { clientSecret } = await response.json();
-        const cardElement = elements.getElement(CardElement);
-        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, { payment_method: { card: cardElement!, billing_details: { name: guestDetails.name, email: guestDetails.email } } });
-        if (stripeError) throw new Error(stripeError.message);
-        if (paymentIntent?.status === "succeeded") {
-          const bookingData = { 
-            userId: auth.currentUser?.uid, hotelId: id, roomId: room.id, roomTitle: room.title, 
-            checkIn: checkIn.toISOString(), checkOut: checkOut.toISOString(), 
-            guestName: guestDetails.name, guestEmail: guestDetails.email, guestPhone: guestDetails.phone, 
-            guests: parseInt(guestCount), price: totalAmount, paymentMethod: "بطاقة ائتمان (Stripe)", status: 'confirmed'
-          };
-          const bookingId = await createBooking(bookingData);
-          await addTransaction(auth.currentUser!.uid, { type: 'booking', amount: totalAmount, description: `حجز غرفة: ${room.title}`, method: 'بطاقة ائتمان (Stripe)' });
-          setLastBooking({ ...bookingData, id: bookingId, createdAt: new Date().toISOString() });
-          setIsSuccess(true);
-          showSuccess("تم الحجز!", "تم الحجز بنجاح!");
-        }
+        // Simulated Card Payment
+        const bookingData = { 
+          userId: auth.currentUser?.uid, hotelId: id, roomId: room.id, roomTitle: room.title, 
+          checkIn: checkIn.toISOString(), checkOut: checkOut.toISOString(), 
+          guestName: guestDetails.name, guestEmail: guestDetails.email, guestPhone: guestDetails.phone, 
+          guests: parseInt(guestCount), price: totalAmount, paymentMethod: "بطاقة دفع افتراضية (تجريبي)", status: 'confirmed'
+        };
+        const bookingId = await createBooking(bookingData);
+        await addTransaction(auth.currentUser!.uid, { type: 'booking', amount: totalAmount, description: `حجز غرفة: ${room.title}`, method: 'بطاقة دفع افتراضية' });
+        setLastBooking({ ...bookingData, id: bookingId, createdAt: new Date().toISOString() });
+        setIsSuccess(true);
+        showSuccess("تم الحجز!", "تم الحجز بنجاح (دفع تجريبي)!");
       }
     } catch (error: any) { 
       setPaymentError(error.message); showError("فشل الحجز", error.message); 
@@ -443,7 +437,7 @@ export default function RoomDetailsPage() {
                             <div className="grid grid-cols-2 gap-3">
                                <button onClick={() => setPaymentMethod('card')} className={cn("p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2", paymentMethod === 'card' ? "border-[#4F46E5] bg-[#4F46E5]/20 text-white shadow-lg shadow-[#4F46E5]/20" : "border-white/10 text-white/40 hover:border-white/20")}>
                                   <CreditCard size={24} />
-                                  <span className="text-[10px] font-black uppercase">بطاقة ائتمان</span>
+                                  <span className="text-[10px] font-black uppercase">دفع تجريبي</span>
                                </button>
                                <button onClick={() => setPaymentMethod('wallet')} className={cn("p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2", paymentMethod === 'wallet' ? "border-[#4F46E5] bg-[#4F46E5]/20 text-white shadow-lg shadow-[#4F46E5]/20" : "border-white/10 text-white/40 hover:border-white/20")}>
                                   <Wallet size={24} />
@@ -463,14 +457,24 @@ export default function RoomDetailsPage() {
                               )}
                            </div>
                          ) : (
-                           <div className="space-y-3">
-                              <Label className="text-[10px] font-black uppercase text-white/60 flex items-center gap-2 tracking-widest"><CreditCard size={14} /> تفاصيل البطاقة</Label>
-                              <div className="p-5 bg-white rounded-2xl shadow-xl"><CardElement options={{ style: { base: { fontSize: '16px', color: '#151e63', fontWeight: '700' } } }} /></div>
+                           <div className="p-8 bg-white/5 border border-white/10 border-dashed rounded-3xl text-center space-y-4">
+                              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto shadow-sm">
+                                <Sparkles className="text-[#818cf8]" size={32} />
+                              </div>
+                              <div>
+                                <p className="font-black text-white">نظام دفع تجريبي آمن</p>
+                                <p className="text-[10px] text-white/40 font-bold mt-1">سيتم تأكيد حجزك فوراً لتجربة النظام التفاعلي.</p>
+                              </div>
                            </div>
                          )}
 
-                         <Button onClick={handleSubmit} disabled={isSubmitting || (paymentMethod === 'card' && !stripe) || (paymentMethod === 'wallet' && walletBalance < (calculateDiscountedTotal() + 120))} className="action-button w-full h-16 rounded-[2rem] text-lg font-black shadow-2xl shadow-[#4F46E5]/20">
-                            {isSubmitting ? "جاري المعالجة..." : "تأكيد الحجز والدفع الآن"}
+                         <Button onClick={handleSubmit} disabled={isSubmitting || (paymentMethod === 'wallet' && walletBalance < (calculateDiscountedTotal() + 120))} className="action-button w-full h-16 rounded-[2rem] text-lg font-black shadow-2xl shadow-[#4F46E5]/20">
+                            {isSubmitting ? (
+                              <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin" />
+                                <span>جاري الحجز...</span>
+                              </div>
+                            ) : "تأكيد الحجز والدفع الآن"}
                          </Button>
                       </div>
                    </div>
