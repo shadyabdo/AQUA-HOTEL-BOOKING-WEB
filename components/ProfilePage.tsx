@@ -26,8 +26,6 @@ import { showError, showSuccess, showInfo, showConfirm } from "@/src/lib/swal";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import WalletTopUpModal from "./WalletTopUpModal";
-import { Elements } from "@stripe/react-stripe-js";
-import { stripePromise } from "@/src/lib/stripe";
 
 // Types from existing components
 interface Booking {
@@ -429,9 +427,7 @@ export default function ProfilePage() {
       </div>
 
       {showWalletModal && (
-        <Elements stripe={stripePromise}>
-          <WalletTopUpModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} />
-        </Elements>
+        <WalletTopUpModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} />
       )}
     </div>
   );
