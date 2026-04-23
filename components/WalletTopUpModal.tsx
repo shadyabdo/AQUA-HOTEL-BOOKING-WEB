@@ -53,7 +53,13 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
           body: JSON.stringify({ amount: numAmount, currency: "egp" }),
         });
 
-        const { clientSecret, error: backendError } = await response.json();
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`خطأ في الخادم (${response.status}): ${text || 'استجابة فارغة'}`);
+        }
+
+        const data = await response.json();
+        const { clientSecret, error: backendError } = data;
 
         if (backendError) throw new Error(backendError);
 
@@ -81,6 +87,7 @@ export default function WalletTopUpModal({ isOpen, onClose }: WalletTopUpModalPr
       // 3. Update Wallet Balance in Firestore (create user doc if missing)
       const userRef = doc(db, "users", auth.currentUser.uid);
       await setDoc(userRef, {
+        uid: auth.currentUser.uid,
         walletBalance: increment(numAmount)
       }, { merge: true });
 

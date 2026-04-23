@@ -23,6 +23,7 @@ import SitemapPage from "@/components/SitemapPage";
 import ScrollToTop from "@/components/ScrollToTop";
 import PrivacyPolicyPage from "@/components/PrivacyPolicyPage";
 import CancellationPolicyPage from "@/components/CancellationPolicyPage";
+import CookieConsent from "@/components/CookieConsent";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { auth, db, handleFirestoreError, OperationType, getCitiesListener, getAllHotels, getFeaturedCitiesListener, fetchTopDeals, toggleFavorite, getFavoritesListener } from "@/src/lib/firebase";
@@ -328,7 +329,8 @@ function AppContent() {
           />
         )}
       </AnimatePresence>
-      <ScrollToTop />
+            <ScrollToTop />
+            <CookieConsent />
     </div>
   );
 }

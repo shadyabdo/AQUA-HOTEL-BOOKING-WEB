@@ -9,7 +9,9 @@ import {
   ChevronRight,
   ShieldCheck,
   Zap,
-  Star
+  Star,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +27,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
+  getRedirectResult,
   onAuthStateChanged
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -40,11 +43,37 @@ export default function LoginPage() {
     password: '',
     name: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          await setDoc(doc(db, "users", result.user.uid), {
+            uid: result.user.uid,
+            email: result.user.email,
+            displayName: result.user.displayName,
+            photoURL: result.user.photoURL,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          showSuccess("تم الدخول", `مرحباً ${result.user.displayName}`);
+          navigate('/');
+        }
+      } catch (error: any) {
+        console.error("Redirect Error:", error);
+        if (error.code !== 'auth/web-storage-unsupported') {
+          showError("خطأ في الدخول", "حدث خطأ أثناء معالجة تسجيل الدخول");
+        }
+      }
+    };
+    handleRedirectResult();
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        // Only navigate if we're not in the middle of a redirect check
+        // or just navigate anyway as a fallback
         navigate('/');
       }
     });
@@ -54,15 +83,34 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    setLoading(true);
     try {
+      let result;
       if (isMobile) {
+        // Redirect mode for mobile - processing happens in useEffect via getRedirectResult
         await signInWithRedirect(auth, provider);
+        return; 
       } else {
-        await signInWithPopup(auth, provider);
+        result = await signInWithPopup(auth, provider);
+      }
+      
+      if (result?.user) {
+        await setDoc(doc(db, "users", result.user.uid), {
+          uid: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName,
+          photoURL: result.user.photoURL,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        
+        showSuccess("تم الدخول", `مرحباً ${result.user.displayName}`);
+        navigate('/');
       }
     } catch (error: any) {
       console.error("Google login failed:", error);
       showError("فشل تسجيل الدخول", "حدث خطأ أثناء الاتصال بجوجل");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -212,10 +260,16 @@ export default function LoginPage() {
                 )}
               </div>
               <div className="relative">
-                <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#4F46E5] transition-colors z-10"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
                 <Input 
                   required
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   className="h-14 pr-12 rounded-2xl bg-white border-gray-100 focus:bg-white transition-all font-bold shadow-sm text-left"
                   value={formData.password}

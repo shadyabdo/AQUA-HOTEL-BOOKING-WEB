@@ -53,6 +53,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { cn } from "@/lib/utils";
 import { showError, showSuccess, showInfo } from "@/src/lib/swal";
 import Lightbox from "@/components/Lightbox";
+import { Trash2 } from "lucide-react";
 
 interface Hotel {
   id: string;
@@ -155,6 +156,7 @@ export default function HotelPage() {
     from: searchParams.get("from") ? new Date(searchParams.get("from")!) : new Date(),
     to: searchParams.get("to") ? new Date(searchParams.get("to")!) : new Date(new Date().getTime() + 86400000 * 3),
   });
+
 
   useEffect(() => {
     if (!id || !cityId) return;
@@ -590,6 +592,7 @@ export default function HotelPage() {
       </section>
 
       <Lightbox images={hotel.images} isOpen={isLightboxOpen} onClose={() => setIsLightboxOpen(false)} initialIndex={lightboxIndex} />
+
 
       {/* ─── Map Lightbox ───────────────────────────────────────── */}
       <AnimatePresence>

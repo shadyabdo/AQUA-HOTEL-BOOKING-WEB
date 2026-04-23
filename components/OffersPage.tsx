@@ -91,8 +91,7 @@ export default function OffersPage() {
                 </Button>
                 <Button 
                   onClick={() => setShowHowToUse(true)}
-                  variant="outline" 
-                  className="h-14 md:h-16 px-10 rounded-2xl text-lg md:text-xl font-black text-white border-white/20 hover:bg-white/10 backdrop-blur-md"
+                  className="h-14 md:h-16 px-10 rounded-2xl text-lg md:text-xl font-black text-white border-2 border-white/20 bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all shadow-xl"
                 >
                    كيفية الاستخدام
                 </Button>

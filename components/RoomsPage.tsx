@@ -118,6 +118,7 @@ export default function RoomsPage() {
   // Filters
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [minRating, setMinRating] = useState(0);
+  const [sortBy, setSortBy] = useState<"popular" | "price_low" | "price_high">("popular");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -215,8 +216,19 @@ export default function RoomsPage() {
         selectedAmenities.every(amenity => hotelAmenities.includes(amenity));
 
       return matchesSearch && matchesDestination && matchesPrice && matchesRating && matchesCategory && matchesAmenities;
+    }).sort((a, b) => {
+      if (sortBy === "popular") {
+        return (b.reviewsCount || 0) - (a.reviewsCount || 0);
+      }
+      if (sortBy === "price_low") {
+        return (Number(a.price) || 0) - (Number(b.price) || 0);
+      }
+      if (sortBy === "price_high") {
+        return (Number(b.price) || 0) - (Number(a.price) || 0);
+      }
+      return 0;
     });
-  }, [hotels, destination, searchTerm, priceRange, minRating, selectedCategory, selectedAmenities]);
+  }, [hotels, destination, searchTerm, priceRange, minRating, selectedCategory, selectedAmenities, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
@@ -227,12 +239,12 @@ export default function RoomsPage() {
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -ml-32 -mb-32" />
         
         <div className="container mx-auto px-4 relative">
-            <div className="flex flex-col gap-10">
-                <div className="space-y-4">
+            <div className="flex flex-col gap-10 items-center text-center">
+                <div className="space-y-4 flex flex-col items-center">
                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-[#151e63] leading-[1.1] tracking-tight">
                      {destination || "اكتشف إقامتك المثالية"}
                    </h1>
-                   <div className="flex flex-wrap items-center gap-4 text-[#777aaf] font-bold text-sm md:text-base">
+                   <div className="flex flex-wrap items-center justify-center gap-4 text-[#777aaf] font-bold text-sm md:text-base">
                       <div className="flex items-center gap-2 bg-[#f5f5fa] px-4 py-2 rounded-xl border border-[#d6d6e7]/30">
                         <CalendarIcon size={16} className="text-primary" /> 
                         {date.from && format(date.from, "d MMM", { locale: ar })} — {date.to && format(date.to, "d MMM", { locale: ar })}
@@ -251,7 +263,7 @@ export default function RoomsPage() {
                 </div>
 
                 {/* Enhanced Search Bar */}
-                <div className="max-w-4xl relative">
+                <div className="w-full max-w-4xl relative">
                   <div className="flex flex-col md:flex-row gap-4 items-stretch">
                     <div className="relative flex-1 group">
                       <div className="absolute inset-y-0 right-0 pr-6 flex items-center pointer-events-none">
@@ -444,10 +456,32 @@ export default function RoomsPage() {
         <main className="lg:col-span-9 space-y-8">
           <div className="flex justify-between items-center mb-4">
              <p className="text-sm font-bold text-[#777aaf]">تم العثور على {filteredHotels.length} فندقاً</p>
-             <div className="flex gap-2">
-                <Button variant="ghost" size="sm" className="font-bold text-[#4F46E5] bg-[#e8e5f0] rounded-lg">الأكثر رواجاً</Button>
-                <Button variant="ghost" size="sm" className="font-bold text-[#777aaf] rounded-lg">الأقل سعراً</Button>
-             </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setSortBy("popular")}
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn("font-bold rounded-lg transition-all", sortBy === "popular" ? "text-[#4F46E5] bg-[#e8e5f0]" : "text-[#777aaf]")}
+                >
+                  الأكثر رواجاً
+                </Button>
+                <Button 
+                  onClick={() => setSortBy("price_low")}
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn("font-bold rounded-lg transition-all", sortBy === "price_low" ? "text-[#4F46E5] bg-[#e8e5f0]" : "text-[#777aaf]")}
+                >
+                  الأقل سعراً
+                </Button>
+                <Button 
+                  onClick={() => setSortBy("price_high")}
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn("font-bold rounded-lg transition-all", sortBy === "price_high" ? "text-[#4F46E5] bg-[#e8e5f0]" : "text-[#777aaf]")}
+                >
+                  الأعلى سعراً
+                </Button>
+              </div>
           </div>
 
           {loading ? (

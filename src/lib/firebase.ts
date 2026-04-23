@@ -234,7 +234,7 @@ export const toggleFavorite = async (userId: string, hotel: any) => {
         return true;
       }
     } else {
-      await setDoc(userRef, { favorites: [{ ...hotelData, addedAt: new Date().toISOString() }] }, { merge: true });
+      await setDoc(userRef, { uid: userId, favorites: [{ ...hotelData, addedAt: new Date().toISOString() }] }, { merge: true });
       return true;
     }
   } catch (error) {
@@ -294,7 +294,7 @@ export const updateUserBalance = async (userId: string, amount: number) => {
     const currentBalance = await getUserBalance(userId);
     const newBalance = currentBalance + amount;
     
-    await setDoc(userRef, { walletBalance: newBalance }, { merge: true });
+    await setDoc(userRef, { uid: userId, walletBalance: newBalance }, { merge: true });
     return newBalance;
   } catch (error) {
     console.error("Error updating user balance:", error);
@@ -386,4 +386,154 @@ export const getTransactionsListener = (userId: string, callback: (transactions:
     console.error("Transactions listener error:", error);
     callback([]);
   });
+};
+
+// ============================================
+// 💬 Reviews & Comments Management
+// ============================================
+
+/**
+ * إضافة تقييم لفندق
+ */
+export const addHotelReview = async (cityId: string, hotelId: string, review: {
+  userId: string,
+  userName: string,
+  userPhoto?: string,
+  rating: number,
+  comment: string,
+  emoji: string
+}) => {
+  try {
+    const reviewsRef = collection(db, 'cities', cityId, 'hotels', hotelId, 'reviews');
+    const docRef = await addDoc(reviewsRef, {
+      ...review,
+      createdAt: serverTimestamp()
+    });
+    
+    // تحديث عدد التقييمات في الفندق نفسه (إختياري لكن مفيد)
+    // نضعها في try-catch منفصلة لضمان نجاح إضافة التقييم حتى لو فشل تحديث بيانات الفندق
+    try {
+      const hotelRef = doc(db, 'cities', cityId, 'hotels', hotelId);
+      const hotelSnap = await getDoc(hotelRef);
+      if (hotelSnap.exists()) {
+        const hotelData = hotelSnap.data();
+        const currentCount = hotelData.reviewsCount || hotelData.reviews || 0;
+        const currentRating = hotelData.rating || 0;
+        
+        // حساب التقييم الجديد (متوسط تقريبي)
+        const newRating = ((currentRating * currentCount) + review.rating) / (currentCount + 1);
+        
+        await updateDoc(hotelRef, {
+          reviewsCount: currentCount + 1,
+          rating: Number(newRating.toFixed(1))
+        });
+      }
+    } catch (updateError) {
+      console.warn("Could not update hotel metadata, but review was saved:", updateError);
+    }
+
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding hotel review:", error);
+    throw error;
+  }
+};
+
+/**
+ * استماع لتقييمات الفندق
+ */
+export const getHotelReviewsListener = (cityId: string, hotelId: string, callback: (reviews: any[]) => void) => {
+  const reviewsRef = collection(db, 'cities', cityId, 'hotels', hotelId, 'reviews');
+  const q = query(reviewsRef, orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => {
+    console.error("Hotel reviews listener error:", error);
+    callback([]);
+  });
+};
+
+/**
+ * إضافة تعليق لمقال
+ */
+export const addArticleComment = async (articleId: string, comment: {
+  userId: string,
+  userName: string,
+  userPhoto?: string,
+  text: string
+}) => {
+  try {
+    const commentsRef = collection(db, 'Articles', articleId, 'comments');
+    const docRef = await addDoc(commentsRef, {
+      ...comment,
+      createdAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding article comment:", error);
+    throw error;
+  }
+};
+
+/**
+ * استماع لتعليقات المقال
+ */
+export const getArticleCommentsListener = (articleId: string, callback: (comments: any[]) => void) => {
+  const commentsRef = collection(db, 'Articles', articleId, 'comments');
+  const q = query(commentsRef, orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => {
+    console.error("Article comments listener error:", error);
+    callback([]);
+  });
+};
+
+/**
+ * استماع لعدد الأشخاص الذين وجدوا المقال مفيداً
+ */
+export const getArticleHelpfulCountListener = (articleId: string, callback: (count: number) => void) => {
+  const feedbackRef = collection(db, 'Articles', articleId, 'feedback');
+  const q = query(feedbackRef, where('isHelpful', '==', true));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.size);
+  }, (error) => {
+    console.error("Helpful count listener error:", error);
+    callback(0);
+  });
+};
+
+/**
+ * استماع لبيانات التفاعل مع المقال (الأشخاص الذين صوتوا)
+ */
+export const getArticleFeedbackListener = (articleId: string, callback: (feedback: any[]) => void) => {
+  const feedbackRef = collection(db, 'Articles', articleId, 'feedback');
+  const q = query(feedbackRef, orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+  }, (error) => {
+    console.error("Article feedback listener error:", error);
+    callback([]);
+  });
+};
+
+/**
+ * إرسال تقييم الفائدة لمقال (Was this helpful?)
+ */
+export const submitArticleFeedback = async (articleId: string, feedback: {
+  userId?: string,
+  userName?: string,
+  userPhoto?: string,
+  isHelpful: boolean,
+  comment?: string
+}) => {
+  try {
+    const feedbackRef = collection(db, 'Articles', articleId, 'feedback');
+    await addDoc(feedbackRef, {
+      ...feedback,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error("Error submitting article feedback:", error);
+  }
 };

@@ -26,6 +26,7 @@ async function startServer() {
 
   // API Routes
   app.post("/api/create-payment-intent", async (req, res) => {
+    console.log("💳 Creating Payment Intent for amount:", req.body.amount);
     try {
       const { amount, currency = "egp" } = req.body;
       

@@ -5,6 +5,13 @@ import { db } from '../src/lib/firebase';
 import { User, Calendar, ArrowRight, BookOpen, ChevronDown, ChevronUp, List } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Article } from './ArticlesPage';
+import { auth, getArticleFeedbackListener, submitArticleFeedback } from '../src/lib/firebase';
+import { ThumbsUp, ThumbsDown, Send, CheckCircle2, User as UserIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { showError, showSuccess } from '@/src/lib/swal';
 
 interface TocItem {
   id: string;
@@ -58,6 +65,13 @@ export default function ArticleDetailsPage() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // New States for Feedback
+  const [allFeedback, setAllFeedback] = useState<any[]>([]);
+  const [feedbackGiven, setFeedbackGiven] = useState<'yes' | 'no' | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [showFeedbackThanks, setShowFeedbackThanks] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+
   useEffect(() => {
     const fetchArticle = async () => {
       if (!id) return;
@@ -81,6 +95,53 @@ export default function ArticleDetailsPage() {
     };
     fetchArticle();
   }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    setAllFeedback([]); // Clear previous article's feedback
+    const unsub = getArticleFeedbackListener(id, (data) => {
+      setAllFeedback(data);
+    });
+    return () => unsub();
+  }, [id]);
+
+  const handleFeedback = async (isHelpful: boolean) => {
+    if (!id) return;
+    setFeedbackGiven(isHelpful ? 'yes' : 'no');
+    
+    // Auto-submit if it's "Yes" and no comment needed immediately
+    if (isHelpful) {
+      setIsSubmittingFeedback(true);
+      await submitArticleFeedback(id, {
+        userId: auth.currentUser?.uid,
+        userName: auth.currentUser?.displayName || 'قارئ',
+        userPhoto: auth.currentUser?.photoURL || undefined,
+        isHelpful: true,
+        comment: ''
+      });
+      setIsSubmittingFeedback(false);
+      setShowFeedbackThanks(true);
+    }
+  };
+
+  const submitFullFeedback = async () => {
+    if (!id || !feedbackGiven) return;
+    setIsSubmittingFeedback(true);
+    try {
+      await submitArticleFeedback(id, {
+        userId: auth.currentUser?.uid,
+        userName: auth.currentUser?.displayName || 'قارئ',
+        userPhoto: auth.currentUser?.photoURL || undefined,
+        isHelpful: feedbackGiven === 'yes',
+        comment: feedbackComment
+      });
+      setShowFeedbackThanks(true);
+    } catch (err) {
+      showError("خطأ", "حدث خطأ أثناء الإرسال");
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
 
   // Highlight active TOC item on scroll
   useEffect(() => {
@@ -318,7 +379,135 @@ export default function ArticleDetailsPage() {
             className="prose prose-lg md:prose-xl max-w-none rtl prose-headings:font-black prose-p:font-medium prose-p:leading-relaxed text-[#5a5e9a] text-right prose-a:text-[#4F46E5]"
             dangerouslySetInnerHTML={{ __html: processedHtml }}
           />
+
+          {/* ─── Feedback Section ("Was this helpful?") ────────────── */}
+          <div className="mt-20 pt-12 border-t border-gray-100 text-center">
+            <AnimatePresence mode="wait">
+              {!showFeedbackThanks ? (
+                <motion.div 
+                  key="feedback-form"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="space-y-8"
+                >
+                  <h3 className="text-2xl font-black text-[#151e63] tracking-tighter">هل وجدت هذه المقالة مفيدة؟</h3>
+                  
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <button
+                      onClick={() => handleFeedback(true)}
+                      className={cn(
+                        "w-full sm:w-auto h-16 px-10 rounded-2xl flex items-center justify-center gap-3 font-black text-lg transition-all",
+                        feedbackGiven === 'yes' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" : "bg-gray-50 text-gray-500 hover:bg-emerald-50 hover:text-emerald-500"
+                      )}
+                    >
+                      <ThumbsUp size={20} /> نعم، شكراً!
+                    </button>
+                    <button
+                      onClick={() => handleFeedback(false)}
+                      className={cn(
+                        "w-full sm:w-auto h-16 px-10 rounded-2xl flex items-center justify-center gap-3 font-black text-lg transition-all",
+                        feedbackGiven === 'no' ? "bg-red-500 text-white shadow-lg shadow-red-200" : "bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-500"
+                      )}
+                    >
+                      <ThumbsDown size={20} /> ليس تماماً
+                    </button>
+                  </div>
+
+                  {feedbackGiven === 'no' && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }} 
+                      animate={{ opacity: 1, y: 0 }}
+                      className="max-w-xl mx-auto space-y-4"
+                    >
+                      <textarea
+                        value={feedbackComment}
+                        onChange={(e) => setFeedbackComment(e.target.value)}
+                        placeholder="كيف يمكننا تحسين هذا المقال؟ (اختياري)"
+                        className="w-full h-32 p-5 rounded-2xl bg-gray-50 border-gray-100 focus:bg-white transition-all font-medium text-sm resize-none border-2 focus:border-[#4F46E5] outline-none"
+                      />
+                      <Button 
+                        onClick={submitFullFeedback}
+                        disabled={isSubmittingFeedback}
+                        className="w-full h-14 bg-[#4F46E5] text-white rounded-2xl font-black"
+                      >
+                        إرسال ملاحظاتي
+                      </Button>
+                    </motion.div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="feedback-thanks"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center gap-4 py-8"
+                >
+                  <div className="w-20 h-20 bg-emerald-50 rounded-[2rem] flex items-center justify-center text-emerald-500 shadow-xl shadow-emerald-100">
+                    <CheckCircle2 size={40} />
+                  </div>
+                  <h3 className="text-2xl font-black text-[#151e63] tracking-tighter">شكراً على تقييمك!</h3>
+                  <p className="text-[#777aaf] font-bold">رأيك يساعدنا على تحسين محتوانا بشكل أفضل.</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
+
+        {/* ─── Feedback Profiles Section (Replaces Static Stats) ── */}
+        <div className="max-w-4xl mx-auto mt-20 space-y-12">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-[#4F46E5]">
+                <CheckCircle2 size={28} />
+              </div>
+              <div>
+                <h2 className="text-3xl font-black text-[#151e63] tracking-tighter">تفاعلات القراء</h2>
+                <p className="text-[#777aaf] font-bold text-sm">{allFeedback.length} أشخاص شاركوا رأيهم</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {allFeedback.length > 0 ? (
+              allFeedback.map((fb) => (
+                <motion.div 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={fb.id} 
+                  className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border-2 border-indigo-50">
+                    <img 
+                      src={fb.userPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${fb.userName || fb.id}`} 
+                      alt={fb.userName} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-black text-[#151e63] text-sm truncate">{fb.userName || 'مستخدم أكوا'}</h4>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                      {fb.isHelpful ? (
+                        <span className="text-emerald-500 flex items-center gap-1"><ThumbsUp size={10} /> وجدها مفيدة</span>
+                      ) : (
+                        <span className="text-red-500 flex items-center gap-1"><ThumbsDown size={10} /> لم يجدها مفيدة</span>
+                      )}
+                    </p>
+                  </div>
+                  {fb.comment && (
+                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#4F46E5] group-hover:text-white transition-colors cursor-help" title={fb.comment}>
+                       <Send size={14} className="rotate-180" />
+                    </div>
+                  )}
+                </motion.div>
+              ))
+            ) : (
+              <div className="md:col-span-2 py-16 text-center bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100">
+                <p className="text-[#777aaf] font-bold">لا توجد تفاعلات بعد. كن أول من يشارك رأيه!</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
