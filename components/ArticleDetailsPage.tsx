@@ -454,60 +454,6 @@ export default function ArticleDetailsPage() {
           </div>
         </motion.div>
 
-        {/* ─── Feedback Profiles Section (Replaces Static Stats) ── */}
-        <div className="max-w-4xl mx-auto mt-20 space-y-12">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center text-[#4F46E5]">
-                <CheckCircle2 size={28} />
-              </div>
-              <div>
-                <h2 className="text-3xl font-black text-[#151e63] tracking-tighter">تفاعلات القراء</h2>
-                <p className="text-[#777aaf] font-bold text-sm">{allFeedback.length} أشخاص شاركوا رأيهم</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {allFeedback.length > 0 ? (
-              allFeedback.map((fb) => (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  key={fb.id} 
-                  className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border-2 border-indigo-50">
-                    <img 
-                      src={fb.userPhoto || `https://api.dicebear.com/7.x/avataaars/svg?seed=${fb.userName || fb.id}`} 
-                      alt={fb.userName} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-black text-[#151e63] text-sm truncate">{fb.userName || 'مستخدم أكوا'}</h4>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-2">
-                      {fb.isHelpful ? (
-                        <span className="text-emerald-500 flex items-center gap-1"><ThumbsUp size={10} /> وجدها مفيدة</span>
-                      ) : (
-                        <span className="text-red-500 flex items-center gap-1"><ThumbsDown size={10} /> لم يجدها مفيدة</span>
-                      )}
-                    </p>
-                  </div>
-                  {fb.comment && (
-                    <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#4F46E5] group-hover:text-white transition-colors cursor-help" title={fb.comment}>
-                       <Send size={14} className="rotate-180" />
-                    </div>
-                  )}
-                </motion.div>
-              ))
-            ) : (
-              <div className="md:col-span-2 py-16 text-center bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100">
-                <p className="text-[#777aaf] font-bold">لا توجد تفاعلات بعد. كن أول من يشارك رأيه!</p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );

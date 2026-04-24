@@ -167,7 +167,7 @@ export default function FAQPage() {
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-6"
                 >
-                  <Accordion type="single" collapsible className="w-full space-y-4">
+                  <Accordion className="w-full space-y-4">
                     {filteredFaqs.map((faq, index) => (
                       <AccordionItem 
                         key={faq.id} 

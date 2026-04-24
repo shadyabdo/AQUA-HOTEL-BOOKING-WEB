@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
 import { db, auth, sendVerificationEmail, createBooking, getAllRooms, addTransaction } from "@/src/lib/firebase";
-import { collection, addDoc, getDocs, query, doc, getDoc, updateDoc, increment } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, doc, getDoc, updateDoc, increment, setDoc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 
