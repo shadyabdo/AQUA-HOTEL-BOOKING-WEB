@@ -48,8 +48,8 @@ service cloud.firestore {
 
     // دعم أسماء collections المختلفة بدون تكرار
     match /{path=**}/{col}/{id} {
-      allow read: if col in ['Hotels', 'hotel', 'Rooms', 'room', 'Articles'];
-      allow write: if isAdmin() && col in ['Hotels', 'hotel', 'Rooms', 'room', 'Articles'];
+      allow read: if col in ['hotels', 'Hotels', 'hotel', 'Hotel', 'rooms', 'Rooms', 'room', 'Room', 'articles', 'Articles'];
+      allow write: if isAdmin() && col in ['hotels', 'Hotels', 'hotel', 'Hotel', 'rooms', 'Rooms', 'room', 'Room', 'articles', 'Articles'];
     }
 
     // محتوى عام
