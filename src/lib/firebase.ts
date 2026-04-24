@@ -187,7 +187,11 @@ export const getAllRooms = async () => {
 
 export const createBooking = async (bookingData: any) => {
   try {
-    const docRef = await addDoc(collection(db, 'bookings'), { ...bookingData, status: 'pending', createdAt: serverTimestamp() });
+    const docRef = await addDoc(collection(db, 'bookings'), { 
+      status: 'pending', 
+      ...bookingData, 
+      createdAt: serverTimestamp() 
+    });
     return docRef.id;
   } catch (error) { throw error; }
 };

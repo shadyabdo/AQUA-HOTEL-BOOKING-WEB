@@ -121,7 +121,10 @@ export default function BookingModal({ isOpen, onClose, initialRoomId, initialHo
       if (paymentMethod === "wallet") {
         if (walletBalance < totalAmount) throw new Error("رصيد المحفظة غير كافٍ.");
         const userRef = doc(db, 'users', auth.currentUser.uid);
-        await updateDoc(userRef, { walletBalance: increment(-totalAmount), totalSpent: increment(totalAmount) });
+        await setDoc(userRef, { 
+          walletBalance: increment(-totalAmount), 
+          totalSpent: increment(totalAmount) 
+        }, { merge: true });
         
         const room = rooms.find(r => r.id === selectedRoom);
         await createBooking({

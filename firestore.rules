@@ -120,8 +120,8 @@ service cloud.firestore {
     }
 
     match /bookings/{bookingId} {
-      allow read: if isSignedIn(); // السماح للمستخدمين برؤية الحجوزات للتحقق من التوفر (Availability Check)
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow read: if true; // السماح للجميع برؤية الحجوزات للتحقق من التوفر
+      allow create: if isSignedIn();
       allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
     }
