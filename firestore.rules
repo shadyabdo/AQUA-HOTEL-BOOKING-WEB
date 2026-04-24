@@ -11,7 +11,6 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn() &&
-             request.auth.token.email_verified == true &&
              (
                request.auth.token.email.lower() == "otdragoze@gmail.com" ||
                request.auth.token.email.lower() == "shadyabdowd2020@gmail.com" ||
@@ -31,20 +30,17 @@ service cloud.firestore {
     // Hotels (موحد + فيه reviews)
     match /{path=**}/hotels/{hotelId} {
       allow read: if true;
-
-      // ⚠️ مفتوحة حاليًا - يفضل تقييدها لاحقًا
-      allow update: if isSignedIn();
-
+      allow update: if isSignedIn(); // للسماح بتحديث التقييمات
       allow write: if isAdmin();
 
       match /reviews/{reviewId} {
         allow read: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isAdmin() || isOwner(resource.data.userId);
+        allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       }
     }
 
-    // Rooms (موحد)
+    // Rooms
     match /{path=**}/rooms/{roomId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -52,8 +48,8 @@ service cloud.firestore {
 
     // دعم أسماء collections المختلفة بدون تكرار
     match /{path=**}/{col}/{id} {
-      allow read: if col in ['Hotels', 'hotel', 'Rooms', 'room'];
-      allow write: if isAdmin() && col in ['Hotels', 'hotel', 'Rooms', 'room'];
+      allow read: if col in ['Hotels', 'hotel', 'Rooms', 'room', 'Articles'];
+      allow write: if isAdmin() && col in ['Hotels', 'hotel', 'Rooms', 'room', 'Articles'];
     }
 
     // محتوى عام
@@ -87,20 +83,12 @@ service cloud.firestore {
     }
 
     // =========================
-    // 5. Bookings (نسخة آمنة)
+    // 5. Bookings
     // =========================
     match /bookings/{bookingId} {
-
-      allow read: if isSignedIn() &&
-                   (isOwner(resource.data.userId) || isAdmin());
-
-      allow create: if isSignedIn()
-                    && request.auth.token.email_verified == true
-                    && request.resource.data.userId == request.auth.uid;
-
-      allow update: if isSignedIn() &&
-                     (isOwner(resource.data.userId) || isAdmin());
-
+      allow read: if true; // للسماح بالتحقق من التوفر للجميع
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow delete: if isAdmin();
     }
 
@@ -108,15 +96,14 @@ service cloud.firestore {
     // 6. Users
     // =========================
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow create, write: if isOwner(userId);
+      allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
 
       match /transactions/{transactionId} {
-        allow read, create: if isOwner(userId);
+        allow read, create: if isSignedIn() && request.auth.uid == userId;
       }
 
       match /favorites/{favoriteId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
     }
 
@@ -130,7 +117,7 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow read: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isAdmin() || isOwner(resource.data.userId);
+        allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       }
 
       match /feedback/{feedbackId} {
@@ -138,29 +125,17 @@ service cloud.firestore {
       }
     }
 
+    // دعم اسم الكولكشن الكبير
     match /Articles/{articleId} {
       allow read: if true;
-
-      allow create: if isAdmin()
-        && request.resource.data.keys().hasAll(['عنوان المقالة', 'محتوى المقالة'])
-        && request.resource.data['محتوى المقالة'] is string
-        && (!request.resource.data.keys().hasAny(['التصنيفات']) ||
-            request.resource.data['التصنيفات'] is list);
-
-      allow update: if isAdmin()
-        && (!request.resource.data.keys().hasAny(['محتوى المقالة']) ||
-            request.resource.data['محتوى المقالة'] is string)
-        && (!request.resource.data.keys().hasAny(['التصنيفات']) ||
-            request.resource.data['التصنيفات'] is list);
-
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
 
       match /comments/{commentId} {
         allow read: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isAdmin() || isOwner(resource.data.userId);
+        allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       }
-
+      
       match /feedback/{feedbackId} {
         allow read, write: if true;
       }
@@ -171,11 +146,7 @@ service cloud.firestore {
     // =========================
     match /coupons/{couponId} {
       allow read: if true;
-
-      allow create, update: if isAdmin()
-        && request.resource.data.keys().hasAll(['code', 'discountPercentage', 'isActive']);
-
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // =========================
