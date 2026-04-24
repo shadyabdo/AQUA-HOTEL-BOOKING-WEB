@@ -295,11 +295,10 @@ export const updateUserBalance = async (userId: string, amount: number) => {
   if (!userId) return;
   try {
     const userRef = doc(db, 'users', userId);
-    const currentBalance = await getUserBalance(userId);
-    const newBalance = currentBalance + amount;
-    
-    await setDoc(userRef, { uid: userId, walletBalance: newBalance }, { merge: true });
-    return newBalance;
+    await setDoc(userRef, { 
+      uid: userId, 
+      walletBalance: increment(amount) 
+    }, { merge: true });
   } catch (error) {
     console.error("Error updating user balance:", error);
     throw error;

@@ -107,9 +107,7 @@ service cloud.firestore {
 
     // --- 6. ملفات المستخدمين وحجوزاتهم ---
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow write: if isSignedIn() && request.auth.uid == userId;
-      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow read, write: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       
       match /transactions/{transactionId} {
         allow read, create, list: if isSignedIn() && request.auth.uid == userId;
