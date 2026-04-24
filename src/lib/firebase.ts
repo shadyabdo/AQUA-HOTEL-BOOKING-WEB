@@ -19,7 +19,8 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  increment
 } from "firebase/firestore";
 
 import firebaseConfig from "../../firebase-applet-config.json";
