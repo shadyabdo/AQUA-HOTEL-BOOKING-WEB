@@ -153,8 +153,8 @@ export default function HotelPage() {
   const [isMapOpen, setIsMapOpen] = useState(false);
 
   const [date, setDate] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: searchParams.get("from") ? new Date(searchParams.get("from")!) : new Date(),
-    to: searchParams.get("to") ? new Date(searchParams.get("to")!) : new Date(new Date().getTime() + 86400000 * 3),
+    from: searchParams.get("from") ? new Date(searchParams.get("from")!) : undefined,
+    to: searchParams.get("to") ? new Date(searchParams.get("to")!) : undefined,
   });
 
 
